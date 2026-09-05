@@ -6,15 +6,6 @@
     
     <!-- CSS-Datei hier einbinden -->
     <link rel="stylesheet" href="style.css">
-    <!-- Supabase zuerst -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Dann deine Dateien in Abhängigkeitsreihenfolge -->
-    <script src="js/factions.js"></script>   <!-- keine Abhängigkeiten -->
-    <script src="js/maps.js"></script>       <!-- braucht nichts -->
-    <script src="js/game.js"></script>       <!-- braucht factions, maps -->
-    <script src="js/render.js"></script>     <!-- braucht game -->
-    <script src="js/multiplayer.js"></script><!-- braucht alles -->
 </head>
 <body>
 <div id="root">
@@ -64,3 +55,12 @@
 </div>
 </div>
 </body>
+<!-- Supabase zuerst -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Dann deine Dateien in Abhängigkeitsreihenfolge -->
+<script src="js/factions.js"></script>   <!-- keine Abhängigkeiten -->
+<script src="js/maps.js"></script>       <!-- braucht nichts -->
+<script src="js/game.js"></script>       <!-- braucht factions, maps -->
+<script src="js/render.js"></script>     <!-- braucht game -->
+<script src="js/multiplayer.js"></script><!-- braucht alles -->
