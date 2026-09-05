@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── CONFIG — hier deine Supabase-Werte eintragen ──────────────
-const SUPABASE_URL = 'https://xtoesokrqxwyzhaoyete.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_tlbHszjzDO717ybGhkJFyQ_vlIXOZc8';
+const SUPABASE_URL = 'https://DEIN-PROJEKT.supabase.co';
+const SUPABASE_KEY = 'DEIN-ANON-KEY';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -199,56 +199,67 @@ function subscribeToRoom(code) {
 }
 
 function handleRoomUpdate(row) {
-  console.log('Room update:', row.lobby_status, row);
+  console.log('Room update:', row.lobby_status, row.faction_a, row.faction_b);
 
-  switch (row.lobby_status) {
+  if (row.lobby_status === 'factions') {
+    // Spieler B ist beigetreten — A geht zur Völkerwahl
+    if (myTeam === 'a') {
+      showFactionScreen();
+    }
+    // Fortschritt anzeigen (wer hat schon gewählt)
+    showFactionProgress(row);
+    return;
+  }
 
-    case 'factions':
-      // Spieler B ist beigetreten — A geht zur Völkerwahl
-      if (myTeam === 'a') {
-        showFactionScreen();
-      }
-      break;
+  if (row.lobby_status === 'map') {
+    // Beide haben Volk gewählt — Karte wählen
+    pickedFactions.a = row.faction_a;
+    pickedFactions.b = row.faction_b;
+    if (myTeam === 'a') {
+      showMapScreen();
+    } else {
+      showWaitingForMap();
+    }
+    return;
+  }
 
-    case 'map':
-      // Beide haben Volk gewählt
-      pickedFactions.a = row.faction_a;
-      pickedFactions.b = row.faction_b;
-      updateFactionBanner();
+  if (row.lobby_status === 'playing') {
+    // Spiel startet
+    pickedFactions.a = row.faction_a;
+    pickedFactions.b = row.faction_b;
+    if (row.game_state) {
+      applyFullState(row.game_state);
+      showGame();
+      renderGame();
+    }
+    return;
+  }
+}
 
-      if (myTeam === 'a') {
-        showMapScreen();           // A wählt Karte
-      } else {
-        showWaitingForMap();       // B wartet
-      }
-      break;
+// Fortschrittsanzeige während Völkerwahl
+function showFactionProgress(row) {
+  const el = document.getElementById('faction-online-progress');
+  if (!el) return;
 
-    case 'playing':
-      // Spiel startet — State von Supabase laden
-      pickedFactions.a = row.faction_a;
-      pickedFactions.b = row.faction_b;
-      if (row.game_state) {
-        applyFullState(row.game_state);
-        showGame();
-        renderGame();
-      }
-      break;
+  const aChosen = row.faction_a
+    ? `✅ ${FACTIONS[row.faction_a].icon} ${FACTIONS[row.faction_a].name}`
+    : '⏳ wählt noch…';
+  const bChosen = row.faction_b
+    ? `✅ ${FACTIONS[row.faction_b].icon} ${FACTIONS[row.faction_b].name}`
+    : '⏳ wählt noch…';
 
-    default:
-      // Einzelne Volk-Updates während 'factions' Status
-      if (row.lobby_status === 'factions') {
-        showFactionProgress(row);
-      }
-      // Spielzug-Updates während 'playing'
-      if (row.lobby_status === 'playing' && row.game_state) {
-        const incoming = row.game_state;
-        // Nur anwenden wenn der Gegner gezogen hat
-        if (incoming.lastMoveBy !== myTeam) {
-          applyMoveState(incoming);
-          renderGame();
-        }
-      }
-      break;
+  el.innerHTML = `🔵 Spieler 1: ${aChosen}<br>🔴 Spieler 2: ${bChosen}`;
+
+  // Wenn beide gewählt haben — nur Spieler A setzt Status auf 'map'
+  if (row.faction_a && row.faction_b && myTeam === 'a') {
+    console.log('Beide haben gewählt — setze Status auf map');
+    sb.from('games')
+      .update({ lobby_status: 'map' })
+      .eq('room_code', currentRoom)
+      .then(({ error }) => {
+        if (error) console.error('Status map setzen fehlgeschlagen:', error.message);
+        else console.log('Status → map gesetzt');
+      });
   }
 }
 
