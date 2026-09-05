@@ -395,6 +395,6 @@ function renderEditor(content){
 // });
 
 // btn-back: zurück zur Lobby (nicht mehr zu showFaction)
-document.getElementById('btn-back').addEventListener('click',()=>{
-  showLobby(); // showLobby kommt aus multiplayer.js und räumt den Online-State auf
-});
+// document.getElementById('btn-back').addEventListener('click',()=>{
+//   showLobby(); // showLobby kommt aus multiplayer.js und räumt den Online-State auf
+// });

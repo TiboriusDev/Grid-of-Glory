@@ -10,7 +10,7 @@ const SUPABASE_KEY = 'DEIN-ANON-KEY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── MULTIPLAYER STATE ─────────────────────────────────────────
-let multiplayerMode = false;   // true = Online, false = Lokal
+// let multiplayerMode = false;   // true = Online, false = Lokal
 let myTeam          = null;    // 'a' oder 'b'
 let currentRoom     = null;    // z.B. 'ABC123'
 let realtimeChannel = null;    // Supabase Realtime Kanal
