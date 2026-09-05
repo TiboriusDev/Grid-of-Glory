@@ -2,7 +2,7 @@
 // GAME STATE
 // ══════════════════════════════════════════════════════
 let pickedFactions = { a: null, b: null };
-let factionPickStep = 'a'; // 'a' then 'b'
+let factionPickStep = 'a';
 let activeMapTab = 'p0';
 let edCols=10, edRows=10, edTerrain=[], edTool='empty';
 
@@ -10,6 +10,11 @@ let COLS=10, ROWS=10, tmap={};
 let units=[], sel=null, phase='move', turn='a';
 let hlM=[], hlA=[], logs=[];
 let combat=null;
+
+// Multiplayer — wird von multiplayer.js gesetzt
+let multiplayerMode = false;
+let myTeam          = null;
+let currentRoom     = null;
 
 // ── helpers ──
 const tk=(c,r)=>`${c},${r}`;
@@ -24,7 +29,6 @@ const addLog=(msg,cls='sys')=>{logs.unshift({msg,cls});if(logs.length>60)logs.po
 function mkUnit(rosterEntry, team, id, col, row, factionKey){
   const r=rosterEntry;
   const fac=FACTIONS[factionKey];
-  // Ork trait: move+1
   const moveBonus = factionKey==='orks' ? 1 : 0;
   return{
     id, factionKey, team, col, row,
@@ -52,7 +56,7 @@ function loadGame(mapDef){
   facB.roster.forEach((r,i)=>{
     if(startsB[i]) units.push(mkUnit(r,'b',uid++,startsB[i][0],startsB[i][1],pickedFactions.b));
   });
-  sel=null;phase='move';turn='a';hlM=[];hlA=[];logs=[];combat=null;
+  sel=null; phase='move'; turn='a'; hlM=[]; hlA=[]; logs=[]; combat=null;
   const fa=FACTIONS[pickedFactions.a], fb=FACTIONS[pickedFactions.b];
   addLog(`${fa.icon} ${fa.name} vs ${fb.icon} ${fb.name}`,'sys');
   addLog(`--- ${fa.icon} ${fa.name} beginnt ---`,'sys');
@@ -61,20 +65,19 @@ function loadGame(mapDef){
 // ── movement & attack ──
 function moveRange(u){
   const out=[];
-  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++)
-    if(dist(u,{col:c,row:r})<=u.move&&!uAt(c,r)&&!blocking(c,r))out.push([c,r]);
+  for(let c=0;c<COLS;c++) for(let r=0;r<ROWS;r++)
+    if(dist(u,{col:c,row:r})<=u.move && !uAt(c,r) && !blocking(c,r)) out.push([c,r]);
   return out;
 }
 function atkCells(u){
   const out=[];
-  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++)
-    if((c!==u.col||r!==u.row)&&dist(u,{col:c,row:r})<=u.ar)out.push([c,r]);
+  for(let c=0;c<COLS;c++) for(let r=0;r<ROWS;r++)
+    if((c!==u.col||r!==u.row) && dist(u,{col:c,row:r})<=u.ar) out.push([c,r]);
   return out;
 }
-function targets(u){return units.filter(e=>e.team!==u.team&&alive(e)&&dist(u,e)<=u.ar);}
+function targets(u){ return units.filter(e=>e.team!==u.team&&alive(e)&&dist(u,e)<=u.ar); }
 
 // ── COVER SYSTEM ──
-// Defender in cover (terrain type 2) gets +1 def die (Marines get +2 via trait)
 function coverBonus(defender){
   if(gT(defender.col,defender.row)!==2) return 0;
   return defender.factionKey==='marines' ? 2 : 1;
@@ -86,11 +89,10 @@ function startCombat(att,def){
   combat={att,def,step:'roll_atk',ar:null,dr:null,coverBonus:cov};
   const covStr=cov>0?` (Ziel in Deckung: +${cov} Rüstungswürfel)`:'';
   addLog(`⚔️ ${att.e} ${att.name} greift ${def.e} ${def.name} an!${covStr}`,'hit');
-  if(cov>0) addLog(`🌿 Deckungsbonus aktiv: ${def.name} würfelt ${def.def+cov} Rüstungswürfel`,'cov');
+  if(cov>0) addLog(`🌿 Deckungsbonus: ${def.name} würfelt ${def.def+cov} Rüstungswürfel`,'cov');
 }
 
 function rollAtk(){
-  // Ork trait: hit on 3+
   combat.ar=roll(combat.att.atk);
   combat.step='roll_def';
   addLog(`${combat.att.e} Angriff [${combat.ar.join(',')}]`,'hit');
@@ -137,47 +139,52 @@ function checkWin(){
   const a=units.filter(u=>u.team==='a'&&alive(u)).length;
   const b=units.filter(u=>u.team==='b'&&alive(u)).length;
   const fa=FACTIONS[pickedFactions.a], fb=FACTIONS[pickedFactions.b];
-  if(a===0){addLog(`${fb.icon} ${fb.name} gewinnen!`,'kil');phase='over';}
-  if(b===0){addLog(`${fa.icon} ${fa.name} gewinnen!`,'kil');phase='over';}
+  if(a===0){ addLog(`${fb.icon} ${fb.name} gewinnen!`,'kil'); phase='over'; }
+  if(b===0){ addLog(`${fa.icon} ${fa.name} gewinnen!`,'kil'); phase='over'; }
 }
 
+// endTurn — im Online-Modus sendet sendMove() den Zug (definiert in multiplayer.js)
 async function endTurn(){
   turn=turn==='a'?'b':'a';
-  units.forEach(u=>{u.moved=false;u.attacked=false;});
-  sel=null;hlM=[];hlA=[];phase='move';combat=null;
+  units.forEach(u=>{u.moved=false; u.attacked=false;});
+  sel=null; hlM=[]; hlA=[]; phase='move'; combat=null;
   const fac=FACTIONS[pickedFactions[turn]];
   addLog(`--- ${fac.icon} ${fac.name} am Zug ---`,'sys');
   renderGame();
-  await sendState();
+
+  // Nur im Online-Modus senden — sendMove() kommt aus multiplayer.js
+  if(multiplayerMode && typeof sendMove === 'function'){
+    await sendMove();
+  }
 }
 
 function selUnit(u){
-  if(u.team!==turn||!alive(u))return;
-  sel=u;combat=null;
+  if(u.team!==turn||!alive(u)) return;
+  sel=u; combat=null;
   hlM=phase==='move'?moveRange(u):[];
   hlA=phase==='attack'?atkCells(u):[];
   renderGame();
 }
 
 function clickCell(c,r){
-  if(phase==='over')return;
-  if(combat&&combat.step!=='roll_atk')return;
+  if(phase==='over') return;
+  if(combat&&combat.step!=='roll_atk') return;
   const occ=uAt(c,r);
-  if(occ&&occ.team===turn&&alive(occ)){selUnit(occ);return;}
+  if(occ&&occ.team===turn&&alive(occ)){ selUnit(occ); return; }
   if(sel){
     if(phase==='move'&&!sel.moved){
       if(hlM.some(([hc,hr])=>hc===c&&hr===r)){
-        sel.col=c;sel.row=r;sel.moved=true;hlM=[];
+        sel.col=c; sel.row=r; sel.moved=true; hlM=[];
         addLog(`${sel.e} ${sel.name} → (${c},${r})`,'mov');
-        renderGame();return;
+        renderGame(); return;
       }
     }
     if(phase==='attack'&&!sel.attacked){
       const tgt=uAt(c,r);
       if(tgt&&tgt.team!==turn&&dist(sel,tgt)<=sel.ar){
-        startCombat(sel,tgt);hlA=[];renderGame();return;
+        startCombat(sel,tgt); hlA=[]; renderGame(); return;
       }
     }
   }
-  sel=null;hlM=[];hlA=[];combat=null;renderGame();
+  sel=null; hlM=[]; hlA=[]; combat=null; renderGame();
 }

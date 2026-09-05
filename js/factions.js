@@ -32,10 +32,10 @@ const FACTIONS = {
     traitColor: '#534AB7', traitBg: '#EEEDFE',
     desc: 'Uraltes Volk mit überlegener Technik und Beweglichkeit. Zerbrechlich, aber unglaublich präzise.',
     roster: [
-      { id:'el1', name:'Guardian',    e:'🌟', hp:6,  move:5, atk:2, ar:5, def:1, dmg:[1,4] },
-      { id:'el2', name:'Dire Avenger',e:'⚡', hp:8,  move:5, atk:3, ar:6, def:2, dmg:[2,4] },
-      { id:'el3', name:'Swooping Hawk',e:'🦅',hp:7,  move:6, atk:2, ar:7, def:1, dmg:[2,5] },
-      { id:'el4', name:'Wraithlord',  e:'🗿', hp:22, move:3, atk:3, ar:3, def:4, dmg:[4,9] },
+      { id:'el1', name:'Guardian',     e:'🌟', hp:6,  move:5, atk:2, ar:5, def:1, dmg:[1,4] },
+      { id:'el2', name:'Dire Avenger', e:'⚡', hp:8,  move:5, atk:3, ar:6, def:2, dmg:[2,4] },
+      { id:'el3', name:'Swooping Hawk',e:'🦅', hp:7,  move:6, atk:2, ar:7, def:1, dmg:[2,5] },
+      { id:'el4', name:'Wraithlord',   e:'🗿', hp:22, move:3, atk:3, ar:3, def:4, dmg:[4,9] },
     ]
   },
   necrons: {
@@ -44,10 +44,10 @@ const FACTIONS = {
     traitColor: '#0F6E56', traitBg: '#E1F5EE',
     desc: 'Unsterbliche Maschinenkrieger. Langsam, aber kaum aufzuhalten — sie stehen einfach wieder auf.',
     roster: [
-      { id:'nc1', name:'Warrior',      e:'🤖', hp:10, move:2, atk:2, ar:3, def:3, dmg:[2,4], reanimation:true },
-      { id:'nc2', name:'Immortal',     e:'⚙️', hp:14, move:2, atk:3, ar:4, def:4, dmg:[3,6], reanimation:true },
-      { id:'nc3', name:'Canoptek Wraith',e:'🕷️',hp:12,move:4, atk:3, ar:3, def:3, dmg:[2,5], reanimation:true },
-      { id:'nc4', name:'Overlord',     e:'👾', hp:16, move:3, atk:4, ar:3, def:5, dmg:[3,7], reanimation:true },
+      { id:'nc1', name:'Warrior',        e:'🤖', hp:10, move:2, atk:2, ar:3, def:3, dmg:[2,4], reanimation:true },
+      { id:'nc2', name:'Immortal',       e:'⚙️', hp:14, move:2, atk:3, ar:4, def:4, dmg:[3,6], reanimation:true },
+      { id:'nc3', name:'Canoptek Wraith',e:'🕷️', hp:12, move:4, atk:3, ar:3, def:3, dmg:[2,5], reanimation:true },
+      { id:'nc4', name:'Overlord',       e:'👾', hp:16, move:3, atk:4, ar:3, def:5, dmg:[3,7], reanimation:true },
     ]
   }
 };
