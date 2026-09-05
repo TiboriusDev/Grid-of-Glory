@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── CONFIG — hier deine Supabase-Werte eintragen ──────────────
-const SUPABASE_URL = 'https://DEIN-PROJEKT.supabase.co';
-const SUPABASE_KEY = 'DEIN-ANON-KEY';
+const SUPABASE_URL = 'https://xtoesokrqxwyzhaoyete.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_tlbHszjzDO717ybGhkJFyQ_vlIXOZc8';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
