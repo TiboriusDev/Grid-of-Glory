@@ -1,0 +1,66 @@
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid & Glory</title>
+    
+    <!-- CSS-Datei hier einbinden -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase zuerst -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Dann deine Dateien in Abhängigkeitsreihenfolge -->
+    <script src="js/factions.js"></script>   <!-- keine Abhängigkeiten -->
+    <script src="js/maps.js"></script>       <!-- braucht nichts -->
+    <script src="js/game.js"></script>       <!-- braucht factions, maps -->
+    <script src="js/render.js"></script>     <!-- braucht game -->
+    <script src="js/multiplayer.js"></script><!-- braucht alles -->
+</head>
+<body>
+<div id="root">
+<h2 class="sr-only">Grid & Glory – 4 Völker, Deckungsbonus, Armeeauswahl, taktisches Rастerspiel.</h2>
+
+<!-- SCREEN 1: FACTION PICK -->
+<div id="screen-faction">
+  <div class="card" style="max-width:500px;">
+    <div class="step-label">Schritt 1 von 3 — Volk wählen</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Jedes Team wählt sein Volk. Dann geht's zur Kartenauswahl.</div>
+    <div style="font-size:11px;font-weight:500;margin-bottom:6px;" id="faction-pick-label"></div>
+    <div class="faction-grid" id="faction-grid"></div>
+    <button class="big-btn" id="btn-faction-next" style="background:#185FA5;" disabled>Weiter →</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: MAP PICK -->
+<div id="screen-map" style="display:none;">
+  <div class="card" style="max-width:500px;">
+    <div class="step-label">Schritt 2 von 3 — Karte wählen</div>
+    <div id="map-tabs" style="margin-bottom:10px;"></div>
+    <div id="map-content"></div>
+    <button class="big-btn" id="btn-map-start" style="background:#185FA5;margin-top:8px;">▶ Spiel starten</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: GAME -->
+<div id="screen-game" style="display:none;">
+  <div class="layout">
+    <div class="left-col">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="legend-row" id="game-legend"></div>
+        <button class="pb" id="btn-back" style="margin-left:auto;">← Neu starten</button>
+      </div>
+      <div id="board-wrap"></div>
+    </div>
+    <div class="sidebar">
+      <div class="card">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;" id="phase-bar"></div>
+        <div id="turn-label" style="font-size:12px;font-weight:500;"></div>
+      </div>
+      <div class="card" id="unit-card"></div>
+      <div class="card"><h3>Aktionen</h3><div id="actions"></div></div>
+      <div class="card"><h3>Kampflog</h3><div class="log-box" id="log-box"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
