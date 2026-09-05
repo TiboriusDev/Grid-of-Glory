@@ -11,13 +11,6 @@ let units=[], sel=null, phase='move', turn='a';
 let hlM=[], hlA=[], logs=[];
 let combat=null;
 
-// Multiplayer-Variablen leben in multiplayer.js:
-// multiplayerMode, myTeam, currentRoom
-// Hier nur als Fallback falls multiplayer.js noch nicht geladen ist
-if(typeof multiplayerMode === 'undefined') var multiplayerMode = false;
-if(typeof myTeam          === 'undefined') var myTeam          = null;
-if(typeof currentRoom     === 'undefined') var currentRoom     = null;
-
 // ── helpers ──
 const tk=(c,r)=>`${c},${r}`;
 const gT=(c,r)=>tmap[tk(c,r)]||0;

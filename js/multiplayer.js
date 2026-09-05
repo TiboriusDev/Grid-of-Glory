@@ -4,16 +4,18 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── CONFIG — hier deine Supabase-Werte eintragen ──────────────
-const SUPABASE_URL = 'https://xtoesokrqxwyzhaoyete.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_tlbHszjzDO717ybGhkJFyQ_vlIXOZc8';
+const SUPABASE_URL = 'https://DEIN-PROJEKT.supabase.co';
+const SUPABASE_KEY = 'DEIN-ANON-KEY';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── MULTIPLAYER STATE ─────────────────────────────────────────
-let multiplayerMode = false;   // true = Online, false = Lokal
-let myTeam          = null;    // 'a' oder 'b'
-let currentRoom     = null;    // z.B. 'ABC123'
-let realtimeChannel = null;    // Supabase Realtime Kanal
+// var (nicht let) damit game.js und render.js diese lesen können
+// ohne Redeclaration-Fehler — NUR hier deklarieren!
+var multiplayerMode = false;
+var myTeam          = null;
+var currentRoom     = null;
+var realtimeChannel = null;
 
 // Lobby-Status: waiting → factions → map → playing
 // waiting  = Raum erstellt, B noch nicht da
@@ -619,5 +621,3 @@ document.getElementById('btn-back').addEventListener('click', () => {
   currentRoom     = null;
   showLobby();
 });
-
-showLobby();
