@@ -1,25 +1,23 @@
+<!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid & Glory</title>
-    
-    <!-- CSS-Datei hier einbinden -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grid of Glory</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <!-- ═══════════════════════════════════════════════════════
      SCREEN 0: LOBBY
-     Ersetze deinen alten screen-lobby Block damit
 ════════════════════════════════════════════════════════ -->
-<div id="screen-lobby">
+<div id="screen-lobby" style="display:none;">
   <div class="card" style="max-width:420px;">
     <h3 style="font-size:18px;margin-bottom:4px;">⚔️ Grid of Glory</h3>
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
       Taktisches Raster-Strategiespiel
     </div>
 
-    <!-- Lokal -->
     <button class="big-btn" id="btn-local"
       style="background:#185FA5;margin-bottom:8px;">
       🖥️ Lokal spielen — 2 Spieler, 1 Gerät
@@ -28,13 +26,11 @@
     <div style="font-size:11px;color:var(--text-secondary);
       text-align:center;margin:8px 0;">— oder Online —</div>
 
-    <!-- Online erstellen -->
     <button class="big-btn" id="btn-create"
       style="background:#2d5a1b;margin-bottom:12px;">
       🌐 Raum erstellen
     </button>
 
-    <!-- Online beitreten -->
     <div style="display:flex;gap:8px;">
       <input id="room-input" placeholder="Raum-Code (z.B. ABC123)"
         style="flex:1;padding:8px;border-radius:var(--radius);
@@ -47,7 +43,6 @@
       </button>
     </div>
 
-    <!-- Fehlermeldung -->
     <div id="join-error"
       style="display:none;margin-top:8px;font-size:12px;color:#E24B4A;"></div>
   </div>
@@ -56,7 +51,6 @@
 
 <!-- ═══════════════════════════════════════════════════════
      SCREEN 1: WARTEN AUF SPIELER B
-     Neu einfügen — nach screen-lobby
 ════════════════════════════════════════════════════════ -->
 <div id="screen-waiting" style="display:none;">
   <div class="card" style="max-width:420px;">
@@ -66,7 +60,6 @@
       Schick diesen Code an deinen Gegner:
     </div>
 
-    <!-- Code-Anzeige -->
     <div style="background:var(--surface-0);border:0.5px solid var(--border);
       border-radius:10px;padding:16px;text-align:center;margin-bottom:12px;">
       <div id="waiting-code"
@@ -80,7 +73,6 @@
       📋 Code kopieren
     </button>
 
-    <!-- Warteanimation -->
     <div style="display:flex;align-items:center;gap:8px;
       font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
       <div style="width:8px;height:8px;border-radius:50%;
@@ -98,12 +90,11 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
-     SCREEN 2: FACTION — Beide Teile (Online + Offline)
-     Ersetze deinen alten screen-faction Block damit
+     SCREEN 2: FACTION AUSWAHL
 ════════════════════════════════════════════════════════ -->
 <div id="screen-faction" style="display:none;">
 
-  <!-- OFFLINE: bestehende 2-Schritt-Auswahl (unverändert) -->
+  <!-- OFFLINE: beide Spieler wählen nacheinander -->
   <div id="faction-offline-container">
     <div class="card" style="max-width:500px;">
       <div class="step-label">Schritt 1 von 3 — Volk wählen</div>
@@ -124,17 +115,12 @@
       <div class="step-label">Volk wählen</div>
       <div style="font-size:12px;font-weight:500;margin-bottom:10px;"
         id="faction-online-label"></div>
-
-      <!-- Fortschritt beider Spieler -->
       <div style="background:var(--surface-0);border:0.5px solid var(--border);
         border-radius:8px;padding:8px 12px;font-size:11px;margin-bottom:10px;
         line-height:1.8;" id="faction-online-progress">
         ⏳ Warte auf Gegner…
       </div>
-
-      <!-- Völker-Grid -->
       <div class="faction-grid" id="faction-online-grid"></div>
-
       <button class="big-btn" id="btn-confirm-faction-online"
         style="background:#185FA5;" disabled>
         ✅ Auswahl bestätigen
@@ -146,7 +132,6 @@
 
 <!-- ═══════════════════════════════════════════════════════
      SCREEN 3: WARTEN AUF KARTE (nur Spieler B)
-     Neu einfügen
 ════════════════════════════════════════════════════════ -->
 <div id="screen-waiting-map" style="display:none;">
   <div class="card" style="max-width:420px;">
@@ -170,14 +155,88 @@
     </button>
   </div>
 </div>
-</body>
 
-<!-- Supabase zuerst -->
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 4: KARTE AUSWÄHLEN
+════════════════════════════════════════════════════════ -->
+<div id="screen-map" style="display:none;">
+  <div class="card" style="max-width:500px;">
+    <div class="step-label" id="map-step-label">Schritt 2 von 3 — Karte wählen</div>
+    <div id="map-tabs" style="margin-bottom:10px;"></div>
+    <div id="map-content"></div>
+    <button class="big-btn" id="btn-map-start"
+      style="background:#185FA5;margin-top:8px;">
+      ▶ Spiel starten
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 5: SPIEL
+════════════════════════════════════════════════════════ -->
+<div id="screen-game" style="display:none;">
+  <div class="layout">
+
+    <!-- Linke Spalte: Brett -->
+    <div class="left-col">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="legend-row" id="game-legend"></div>
+        <button class="pb" id="btn-back" style="margin-left:auto;">← Menü</button>
+      </div>
+      <div id="board-wrap"></div>
+    </div>
+
+    <!-- Rechte Spalte: Sidebar -->
+    <div class="sidebar">
+
+      <!-- Phase & Zug -->
+      <div class="card">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;"
+          id="phase-bar"></div>
+        <div id="turn-label" style="font-size:12px;font-weight:500;"></div>
+      </div>
+
+      <!-- Einheiteninfo -->
+      <div class="card" id="unit-card">
+        <h3>Keine Einheit gewählt</h3>
+        <div style="font-size:11px;color:var(--text-secondary);">
+          Einheit anklicken
+        </div>
+      </div>
+
+      <!-- Aktionen & Würfeln -->
+      <div class="card">
+        <h3>Aktionen</h3>
+        <div id="actions"></div>
+      </div>
+
+      <!-- Kampflog -->
+      <div class="card">
+        <h3>Kampflog</h3>
+        <div class="log-box" id="log-box"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS — nach dem HTML, in Ladereihenfolge
+════════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/factions.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/game.js"></script>
+<script src="js/render.js"></script>
+<script src="js/multiplayer.js"></script>
 
-<!-- Dann deine Dateien in Abhängigkeitsreihenfolge -->
-<script src="js/factions.js"></script>   <!-- keine Abhängigkeiten -->
-<script src="js/maps.js"></script>       <!-- braucht nichts -->
-<script src="js/game.js"></script>       <!-- braucht factions, maps -->
-<script src="js/render.js"></script>     <!-- braucht game -->
-<script src="js/multiplayer.js"></script><!-- braucht alles -->
+<!-- Init: alle Scripts geladen, jetzt starten -->
+<script>
+  showLobby();
+</script>
+
+</body>
+</html>

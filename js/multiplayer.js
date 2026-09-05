@@ -10,9 +10,9 @@ const SUPABASE_KEY = 'sb_publishable_tlbHszjzDO717ybGhkJFyQ_vlIXOZc8';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── MULTIPLAYER STATE ─────────────────────────────────────────
-// let multiplayerMode = false;   // true = Online, false = Lokal
-// let myTeam          = null;    // 'a' oder 'b'
-// let currentRoom     = null;    // z.B. 'ABC123'
+let multiplayerMode = false;   // true = Online, false = Lokal
+let myTeam          = null;    // 'a' oder 'b'
+let currentRoom     = null;    // z.B. 'ABC123'
 let realtimeChannel = null;    // Supabase Realtime Kanal
 
 // Lobby-Status: waiting → factions → map → playing
@@ -619,10 +619,3 @@ document.getElementById('btn-back').addEventListener('click', () => {
   currentRoom     = null;
   showLobby();
 });
-
-
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-
-showLobby();

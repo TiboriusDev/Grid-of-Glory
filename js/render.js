@@ -372,29 +372,29 @@ function renderEditor(content){
 }
 
 // btn-map-start: Guard für Online-Modus (Online wird von multiplayer.js behandelt)
-// document.getElementById('btn-map-start').addEventListener('click',()=>{
-//   if(multiplayerMode) return; // Online: multiplayer.js übernimmt
+document.getElementById('btn-map-start').addEventListener('click',()=>{
+  if(multiplayerMode) return; // Online: multiplayer.js übernimmt
 
-//   let mapDef;
-//   if(activeMapTab.startsWith('p')){
-//     mapDef=MAPS[parseInt(activeMapTab[1])];
-//   } else {
-//     const etm={}; edTerrain.forEach(({c,r,t})=>{ etm[`${c},${r}`]=t; });
-//     const free=[];
-//     for(let r=0;r<edRows;r++) for(let c=0;c<edCols;c++)
-//       if(!(etm[`${c},${r}`]>0)) free.push([c,r]);
-//     const aSlots=free.filter(([c])=>c<Math.floor(edCols/3)).slice(0,4);
-//     const bSlots=free.filter(([c])=>c>=Math.ceil(edCols*2/3)).slice(0,4);
-//     mapDef={name:'Eigene Karte',cols:edCols,rows:edRows,terrain:edTerrain,
-//       starts:{a:aSlots,b:bSlots}};
-//   }
-//   loadGame(mapDef);
-//   hideAllScreens();
-//   document.getElementById('screen-game').style.display='';
-//   renderGame();
-// });
+  let mapDef;
+  if(activeMapTab.startsWith('p')){
+    mapDef=MAPS[parseInt(activeMapTab[1])];
+  } else {
+    const etm={}; edTerrain.forEach(({c,r,t})=>{ etm[`${c},${r}`]=t; });
+    const free=[];
+    for(let r=0;r<edRows;r++) for(let c=0;c<edCols;c++)
+      if(!(etm[`${c},${r}`]>0)) free.push([c,r]);
+    const aSlots=free.filter(([c])=>c<Math.floor(edCols/3)).slice(0,4);
+    const bSlots=free.filter(([c])=>c>=Math.ceil(edCols*2/3)).slice(0,4);
+    mapDef={name:'Eigene Karte',cols:edCols,rows:edRows,terrain:edTerrain,
+      starts:{a:aSlots,b:bSlots}};
+  }
+  loadGame(mapDef);
+  hideAllScreens();
+  document.getElementById('screen-game').style.display='';
+  renderGame();
+});
 
 // btn-back: zurück zur Lobby (nicht mehr zu showFaction)
-// document.getElementById('btn-back').addEventListener('click',()=>{
-//   showLobby(); // showLobby kommt aus multiplayer.js und räumt den Online-State auf
-// });
+document.getElementById('btn-back').addEventListener('click',()=>{
+  showLobby(); // showLobby kommt aus multiplayer.js und räumt den Online-State auf
+});
