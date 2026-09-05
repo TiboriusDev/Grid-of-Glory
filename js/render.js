@@ -350,6 +350,3 @@ document.getElementById('btn-map-start').addEventListener('click',()=>{
   renderGame();
 });
 document.getElementById('btn-back').addEventListener('click',()=>showFaction());
-
-// ── INIT ──
-showLobby();
