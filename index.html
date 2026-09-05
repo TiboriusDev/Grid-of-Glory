@@ -11,6 +11,45 @@
 <div id="root">
 <h2 class="sr-only">Grid & Glory – 4 Völker, Deckungsbonus, Armeeauswahl, taktisches Rастerspiel.</h2>
 
+<!-- SCREEN 0: MULTIPLAYER LOBBY -->
+<div id="screen-lobby">
+  <div class="card" style="max-width:400px;">
+    <h3 style="font-size:15px;margin-bottom:12px;">⚔️ Grid of Glory</h3>
+
+    <button class="big-btn" id="btn-local" style="background:#185FA5;margin-bottom:8px;">
+      🖥️ Lokal spielen (2 Spieler, 1 Gerät)
+    </button>
+
+    <button class="big-btn" id="btn-create" style="background:#2d5a1b;margin-bottom:8px;">
+      🌐 Online — Raum erstellen
+    </button>
+
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <input id="room-input" placeholder="Raum-Code eingeben..."
+        style="flex:1;padding:7px;border-radius:var(--radius);border:0.5px solid var(--border-strong);
+        background:var(--surface-2);color:var(--text-primary);font-size:13px;">
+      <button class="big-btn" id="btn-join"
+        style="background:#6b2fa0;width:auto;padding:7px 14px;margin:0;">
+        Beitreten
+      </button>
+    </div>
+
+    <!-- wird angezeigt wenn Raum erstellt -->
+    <div id="room-code-display" style="display:none;margin-top:12px;
+      background:var(--surface-0);border:0.5px solid var(--border);
+      border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">
+        Raum-Code — schick ihn dem Gegner:
+      </div>
+      <div id="room-code-text"
+        style="font-size:24px;font-weight:700;letter-spacing:4px;"></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">
+        Warte auf Spieler 2…
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- SCREEN 1: FACTION PICK -->
 <div id="screen-faction">
   <div class="card" style="max-width:500px;">

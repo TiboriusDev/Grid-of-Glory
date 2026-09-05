@@ -141,13 +141,14 @@ function checkWin(){
   if(b===0){addLog(`${fa.icon} ${fa.name} gewinnen!`,'kil');phase='over';}
 }
 
-function endTurn(){
+async function endTurn(){
   turn=turn==='a'?'b':'a';
   units.forEach(u=>{u.moved=false;u.attacked=false;});
   sel=null;hlM=[];hlA=[];phase='move';combat=null;
   const fac=FACTIONS[pickedFactions[turn]];
   addLog(`--- ${fac.icon} ${fac.name} am Zug ---`,'sys');
   renderGame();
+  await sendState();
 }
 
 function selUnit(u){

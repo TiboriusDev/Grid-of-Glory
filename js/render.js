@@ -352,4 +352,4 @@ document.getElementById('btn-map-start').addEventListener('click',()=>{
 document.getElementById('btn-back').addEventListener('click',()=>showFaction());
 
 // ── INIT ──
-showFaction();
+showLobby();
