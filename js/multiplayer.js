@@ -619,3 +619,5 @@ document.getElementById('btn-back').addEventListener('click', () => {
   currentRoom     = null;
   showLobby();
 });
+
+showLobby();
