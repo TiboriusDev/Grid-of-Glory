@@ -138,23 +138,22 @@ function checkWin(){
   if(b===0){ addLog(`${fa.icon} ${fa.name} gewinnen!`,'kil'); phase='over'; }
 }
 
-// endTurn — im Online-Modus sendet sendMove() den Zug (definiert in multiplayer.js)
-async function endTurn(){
+// endTurn als var — damit multiplayer.js es überschreiben kann
+// NICHT als "function endTurn()" deklarieren!
+var endTurn = async function(){
   turn=turn==='a'?'b':'a';
   units.forEach(u=>{u.moved=false; u.attacked=false;});
   sel=null; hlM=[]; hlA=[]; phase='move'; combat=null;
   const fac=FACTIONS[pickedFactions[turn]];
   addLog(`--- ${fac.icon} ${fac.name} am Zug ---`,'sys');
   renderGame();
-
-  // Nur im Online-Modus senden — sendMove() kommt aus multiplayer.js
-  if(multiplayerMode && typeof sendMove === 'function'){
-    await sendMove();
-  }
-}
+  // sendMove() wird von multiplayer.js nach dem Override aufgerufen
+};
 
 function selUnit(u){
   if(u.team!==turn||!alive(u)) return;
+  // Online: nur eigene Einheiten auswählen
+  if(multiplayerMode && u.team !== myTeam) return;
   sel=u; combat=null;
   hlM=phase==='move'?moveRange(u):[];
   hlA=phase==='attack'?atkCells(u):[];
@@ -163,6 +162,8 @@ function selUnit(u){
 
 function clickCell(c,r){
   if(phase==='over') return;
+  // Online: nichts tun wenn Gegner dran ist
+  if(multiplayerMode && turn !== myTeam) return;
   if(combat&&combat.step!=='roll_atk') return;
   const occ=uAt(c,r);
   if(occ&&occ.team===turn&&alive(occ)){ selUnit(occ); return; }

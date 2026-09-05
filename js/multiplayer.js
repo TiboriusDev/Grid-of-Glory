@@ -442,12 +442,13 @@ function applyMoveState(state) {
 // im Online-Modus der Zug nach Supabase gesendet wird
 // ═══════════════════════════════════════════════════════════════
 
+// endTurn aus game.js überschreiben — funktioniert weil game.js es als var deklariert
 const _endTurnBase = endTurn;
 
 endTurn = async function() {
-  _endTurnBase();
+  await _endTurnBase();  // lokale Logik
   if (multiplayerMode) {
-    await sendMove();
+    await sendMove();    // Zug an Gegner senden
   }
 };
 
