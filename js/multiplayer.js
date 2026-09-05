@@ -140,6 +140,15 @@ function hideLobby() {
   document.getElementById('screen-lobby').style.display = 'none';
 }
 
+function showLobby() {
+  // alle anderen Screens verstecken
+  document.getElementById('screen-faction').style.display = 'none';
+  document.getElementById('screen-map').style.display    = 'none';
+  document.getElementById('screen-game').style.display   = 'none';
+  // Lobby anzeigen
+  document.getElementById('screen-lobby').style.display  = '';
+}
+
 // sendState nach jedem Zug aufrufen — in endTurn() hinzufügen:
 // async function endTurn() { ...; await sendState(); }
 
