@@ -11,6 +11,12 @@ let units=[], sel=null, phase='move', turn='a';
 let hlM=[], hlA=[], logs=[];
 let combat=null;
 
+// Deployment Phase
+let deploymentMode = false;
+let deploymentZoneRows = 3; // erste 3 Reihen
+let deploymentConfirmed = { a: false, b: false };
+let deploymentDragUnit = null;
+
 // ── helpers ──
 const tk=(c,r)=>`${c},${r}`;
 const gT=(c,r)=>tmap[tk(c,r)]||0;
@@ -18,6 +24,10 @@ const blocking=(c,r)=>{const t=gT(c,r);return t===1||t===3;};
 const dist=(a,b)=>Math.abs(a.col-b.col)+Math.abs(a.row-b.row);
 const alive=u=>u.hp>0;
 const uAt=(c,r)=>units.find(u=>u.col===c&&u.row===r&&alive(u));
+const inDeploymentZone=(u)=>{
+  if(u.team==='a') return u.row < deploymentZoneRows;
+  else return u.row >= ROWS - deploymentZoneRows;
+};
 const roll=n=>Array.from({length:n},()=>Math.floor(Math.random()*6)+1);
 const addLog=(msg,cls='sys')=>{logs.unshift({msg,cls});if(logs.length>60)logs.pop();};
 
@@ -92,6 +102,7 @@ function rollAtk(){
   combat.step='roll_def';
   addLog(`${combat.att.e} Angriff [${combat.ar.join(',')}]`,'hit');
   renderGame();
+  if(typeof sendMove==='function') sendMove(); // Sync sofort nach Angriffswurf
 }
 
 function rollDef(){
@@ -128,6 +139,7 @@ function rollDef(){
   combat=null;
   checkWin();
   renderGame();
+  if(typeof sendMove==='function') sendMove(); // Sync sofort nach Rüstungswurf
 }
 
 function checkWin(){
@@ -151,9 +163,20 @@ var endTurn = async function(){
 };
 
 function selUnit(u){
-  if(u.team!==turn||!alive(u)) return;
-  // Online: nur eigene Einheiten auswählen
-  if(multiplayerMode && u.team !== myTeam) return;
+  if(!alive(u)) return;
+  
+  // Im Multiplayer: gegnerische Einheiten nur anschauen erlaubt
+  if(multiplayerMode && u.team !== myTeam) {
+    sel = u;
+    hlM = [];
+    hlA = [];
+    renderGame();
+    return;
+  }
+  
+  // Nur der aktuelle Spieler kann seine Einheiten kontrollieren
+  if(u.team!==turn) return;
+  
   sel=u; combat=null;
   hlM=phase==='move'?moveRange(u):[];
   hlA=phase==='attack'?atkCells(u):[];
@@ -172,13 +195,17 @@ function clickCell(c,r){
       if(hlM.some(([hc,hr])=>hc===c&&hr===r)){
         sel.col=c; sel.row=r; sel.moved=true; hlM=[];
         addLog(`${sel.e} ${sel.name} → (${c},${r})`,'mov');
-        renderGame(); return;
+        renderGame();
+        if(typeof sendMove==='function') sendMove(); // Sync sofort nach Bewegung
+        return;
       }
     }
     if(phase==='attack'&&!sel.attacked){
       const tgt=uAt(c,r);
       if(tgt&&tgt.team!==turn&&dist(sel,tgt)<=sel.ar){
-        startCombat(sel,tgt); hlA=[]; renderGame(); return;
+        startCombat(sel,tgt); hlA=[]; renderGame();
+        if(typeof sendMove==='function') sendMove(); // Sync sofort nach Angriff
+        return;
       }
     }
   }

@@ -23,7 +23,7 @@ var realtimeChannel = null;
 
 function hideAllScreens() {
   ['screen-lobby','screen-waiting','screen-faction',
-   'screen-waiting-map','screen-map','screen-game']
+   'screen-waiting-map','screen-map','screen-deployment','screen-game','screen-winner']
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -85,6 +85,35 @@ function showGame() {
   document.getElementById('screen-game').style.display = '';
 }
 
+function showWinnerScreen() {
+  hideAllScreens();
+  document.getElementById('screen-winner').style.display = '';
+  
+  // Gewinner bestimmen — schau die letzte Log-Nachricht
+  const fa = FACTIONS[pickedFactions.a];
+  const fb = FACTIONS[pickedFactions.b];
+  const winnerLog = logs[logs.length - 1];
+  const isPlayerWinner = winnerLog && (
+    (myTeam === 'a' && winnerLog.msg.includes(fa.name)) ||
+    (myTeam === 'b' && winnerLog.msg.includes(fb.name))
+  );
+  
+  const titleEl = document.getElementById('winner-title');
+  const infoEl = document.getElementById('winner-info');
+  
+  if (isPlayerWinner) {
+    titleEl.innerHTML = '🏆 Du hast gewonnen!';
+    infoEl.innerHTML = `<div style="color:#4a8a2a;font-weight:600;">${winnerLog.msg}</div>`;
+  } else {
+    titleEl.innerHTML = '💔 Du hast verloren';
+    infoEl.innerHTML = `<div style="color:#c85050;font-weight:600;">${winnerLog.msg}</div>`;
+  }
+  
+  // Buttons verbinden
+  document.getElementById('btn-rematch').onclick = startRematch;
+  document.getElementById('btn-menu-after-game').onclick = showLobby;
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // RAUM ERSTELLEN & BEITRETEN
@@ -144,6 +173,43 @@ async function joinRoom(code) {
   showFactionScreen();
 }
 
+async function startRematch() {
+  // Rematch: Zurück zur Kartenauswahl
+  if (!multiplayerMode || !currentRoom) {
+    showLobby();
+    return;
+  }
+  
+  // Supabase aktualisieren: Zurück zum 'map' Status, game_state/deployment_state leeren
+  const { error } = await sb.from('games')
+    .update({
+      lobby_status: 'map',
+      game_state: null,
+      deployment_state: null
+    })
+    .eq('room_code', currentRoom);
+  
+  if (error) {
+    console.error('Rematch fehlgeschlagen:', error.message);
+    alert('Fehler beim Starten des Rematch');
+    return;
+  }
+  
+  // Lokale Variablen zurücksetzen
+  phase = 'move';
+  units = [];
+  sel = null;
+  hlM = [];
+  hlA = [];
+  combat = null;
+  deploymentMode = false;
+  deploymentConfirmed = { a: false, b: false };
+  logs = [];
+  
+  // Map-Screen anzeigen
+  showMapScreen();
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // REALTIME SUBSCRIPTION
@@ -200,6 +266,47 @@ function handleRoomUpdate(row) {
     return;
   }
 
+  // ── Aufstellungsphase ──
+  if (row.lobby_status === 'deployment') {
+    pickedFactions.a = row.faction_a;
+    pickedFactions.b = row.faction_b;
+    
+    if (units.length === 0) {
+      // Ersten Map laden
+      const mapDef = row.map_config;
+      loadGame(mapDef);
+    }
+    
+    // Deployment-Status laden (wer bestätigt hat)
+    if (row.deployment_state) {
+      deploymentConfirmed = row.deployment_state.confirmed || { a: false, b: false };
+      
+      // Nur die Positionen des GEGNERS aktualisieren, nicht die eigenen!
+      if (myTeam === 'a' && row.deployment_state.positions_b) {
+        row.deployment_state.positions_b.forEach(({ id, col, row: r }) => {
+          const u = units.find(u => u.id === id && u.team === 'b');
+          if (u) { u.col = col; u.row = r; }
+        });
+      } else if (myTeam === 'b' && row.deployment_state.positions_a) {
+        row.deployment_state.positions_a.forEach(({ id, col, row: r }) => {
+          const u = units.find(u => u.id === id && u.team === 'a');
+          if (u) { u.col = col; u.row = r; }
+        });
+      }
+    }
+    
+    deploymentMode = true;
+    renderDeploymentScreen();
+    
+    // Wenn beide bestätigt: Spieler A startet Spiel, B wartet auf 'playing'
+    if (deploymentConfirmed.a && deploymentConfirmed.b && myTeam === 'a') {
+      setTimeout(() => {
+        startGameAfterDeployment();
+      }, 500);
+    }
+    return;
+  }
+
   // ── Spiel läuft ──
   if (row.lobby_status === 'playing') {
     pickedFactions.a = row.faction_a;
@@ -209,8 +316,9 @@ function handleRoomUpdate(row) {
 
     const incoming = row.game_state;
 
-    // Spielstart: Spieler B baut das Spielfeld auf
-    if (units.length === 0) {
+    // Spielstart: Spieler B baut das Spielfeld auf (oder nach Deployment)
+    if (units.length === 0 || deploymentMode) {
+      deploymentMode = false;
       applyFullState(incoming);
       showGame();
       renderGame();
@@ -305,13 +413,33 @@ async function confirmFactionOnline() {
 
 async function startOnlineGame(mapDef) {
   loadGame(mapDef);
+  deploymentMode = true;
+  deploymentConfirmed = { a: false, b: false };
+
+  const { error } = await sb.from('games')
+    .update({
+      lobby_status: 'deployment',
+      map_config:   mapDef,
+      deployment_state: buildDeploymentState()
+    })
+    .eq('room_code', currentRoom);
+
+  if (error) {
+    console.error('Deployment starten fehlgeschlagen:', error.message);
+    return;
+  }
+
+  renderDeploymentScreen();
+}
+
+async function startGameAfterDeployment() {
   const state = buildFullState();
 
   const { error } = await sb.from('games')
     .update({
       lobby_status: 'playing',
-      map_config:   mapDef,
-      game_state:   state
+      game_state:   state,
+      deployment_state: null
     })
     .eq('room_code', currentRoom);
 
@@ -320,6 +448,7 @@ async function startOnlineGame(mapDef) {
     return;
   }
 
+  deploymentMode = false;
   showGame();
   renderGame();
 }
@@ -363,10 +492,19 @@ function buildFullState() {
 
 // Nur Zug-Daten (während des Spiels)
 function buildMoveState() {
+  const combatData = combat ? {
+    attId: combat.att.id,
+    defId: combat.def.id,
+    step: combat.step,
+    ar: combat.ar,
+    coverBonus: combat.coverBonus
+  } : null;
+  
   return {
     turn,
     phase,
     lastMoveBy: myTeam,
+    combat: combatData,
     units: units.map(u => ({
       id:         u.id,
       col:        u.col,
@@ -429,10 +567,29 @@ function applyMoveState(state) {
     u.attacked   = su.attacked;
     u.reanimated = su.reanimated;
   });
+  
+  // Combat-State wiederherstellen
+  if (state.combat) {
+    const att = units.find(u => u.id === state.combat.attId);
+    const def = units.find(u => u.id === state.combat.defId);
+    if (att && def) {
+      combat = {
+        att,
+        def,
+        step: state.combat.step,
+        ar: state.combat.ar,
+        dr: null,
+        coverBonus: state.combat.coverBonus
+      };
+    }
+  } else {
+    combat = null;
+  }
+  
   turn  = state.turn;
   phase = state.phase;
   if (state.log) logs = state.log;
-  sel = null; hlM = []; hlA = []; combat = null;
+  sel = null; hlM = []; hlA = [];
 }
 
 
@@ -451,6 +608,41 @@ endTurn = async function() {
     await sendMove();    // Zug an Gegner senden
   }
 };
+
+
+// ═══════════════════════════════════════════════════════════════
+// DEPLOYMENT FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function buildDeploymentState() {
+  // Nur EIGENE Positionen speichern, nicht die des Gegners
+  const myPositions = units.filter(u => u.team === myTeam).map(u => ({
+    id: u.id,
+    col: u.col,
+    row: u.row
+  }));
+  
+  const posKey = myTeam === 'a' ? 'positions_a' : 'positions_b';
+  const confirmed = { ...deploymentConfirmed };
+  
+  return {
+    confirmed,
+    [posKey]: myPositions
+  };
+}
+
+async function confirmDeployment() {
+  if (!multiplayerMode || !currentRoom) return;
+  
+  deploymentConfirmed[myTeam] = true;
+  
+  const { error } = await sb.from('games')
+    .update({ deployment_state: buildDeploymentState() })
+    .eq('room_code', currentRoom);
+  
+  if (error) console.error('Deployment bestätigen fehlgeschlagen:', error.message);
+  else renderDeploymentScreen();
+}
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -558,3 +750,17 @@ document.getElementById('btn-map-start').addEventListener('click', async () => {
   }
   await startOnlineGame(mapDef);
 }, true);
+
+// Deployment Buttons
+document.getElementById('btn-deployment-confirm')?.addEventListener('click', () => {
+  confirmDeployment();
+});
+
+document.getElementById('btn-back-deployment')?.addEventListener('click', () => {
+  if (realtimeChannel) realtimeChannel.unsubscribe();
+  multiplayerMode = false;
+  myTeam          = null;
+  currentRoom     = null;
+  deploymentMode  = false;
+  showLobby();
+});

@@ -1,4 +1,147 @@
 // ══════════════════════════════════════════════════════
+// SIDEBAR TABS INIT
+// ══════════════════════════════════════════════════════
+function initSidebarTabs(){
+  const tabs=document.querySelectorAll('.sidebar-tab');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      const tabName=tab.dataset.tab;
+      // Deaktiviere alle Tabs und Contents
+      tabs.forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-tab-content').forEach(c=>c.classList.remove('active'));
+      // Aktiviere den geklickten Tab
+      tab.classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// DEPLOYMENT BOARD RENDER
+// ══════════════════════════════════════════════════════
+function renderDeploymentBoard(){
+  const wrap=document.getElementById('deployment-board-wrap');
+  wrap.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='board-grid';
+  grid.style.gridTemplateColumns=`repeat(${COLS},40px)`;
+  grid.style.gridTemplateRows=`repeat(${ROWS},40px)`;
+  
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell=document.createElement('div');
+      const ter=gT(c,r);
+      let cls='cell '+((c+r)%2===0?'c-light':'c-dark');
+      if(ter===1) cls+=' t-wall';
+      else if(ter===2) cls+=' t-cover';
+      else if(ter===3) cls+=' t-water';
+      
+      // Aufstellungszone markieren
+      const inZoneA = r < deploymentZoneRows;
+      const inZoneB = r >= ROWS - deploymentZoneRows;
+      if(inZoneA) cls+=' deployment-zone-a';
+      else if(inZoneB) cls+=' deployment-zone-b';
+      
+      cell.className=cls;
+      if(ter===1) cell.textContent='🧱';
+      else if(ter===3) cell.textContent='🌊';
+      
+      const u=uAt(c,r);
+      if(u){
+        const ud=document.createElement('div');
+        ud.className='unit';
+        ud.style.background=u.facBg;
+        ud.style.borderColor=u.facColor;
+        ud.textContent=u.e;
+        ud.title=`${u.name}`;
+        
+        // Nur eigene Einheiten draggbar
+        if(u.team === myTeam && !deploymentConfirmed[myTeam]){
+          ud.draggable=true;
+          
+          // Drag Events
+          ud.addEventListener('dragstart',(e)=>{
+            deploymentDragUnit={unit:u, fromC:c, fromR:r};
+            e.dataTransfer.effectAllowed='move';
+          });
+        }
+        
+        const hb=document.createElement('div'); hb.className='hp-bar';
+        const hf=document.createElement('div'); hf.className='hp-fill';
+        hf.style.width='100%'; hb.appendChild(hf); ud.appendChild(hb);
+        cell.appendChild(ud);
+      }
+      
+      // Drop Zone — nur wenn nicht bestätigt
+      if(!deploymentConfirmed[myTeam]){
+        cell.addEventListener('dragover',(e)=>{
+          e.preventDefault();
+          e.dataTransfer.dropEffect='move';
+          cell.style.boxShadow='inset 0 0 0 2px var(--gold)';
+        });
+        cell.addEventListener('dragleave',()=>{
+          cell.style.boxShadow='';
+        });
+        cell.addEventListener('drop',(e)=>{
+          e.preventDefault();
+          cell.style.boxShadow='';
+          if(!deploymentDragUnit) return;
+          const{unit,fromC,fromR}=deploymentDragUnit;
+          // Check: Zielfeld freigeben + in Zone + nicht blockiert
+          const occupied=uAt(c,r);
+          if(occupied) return;
+          if(!inDeploymentZone({...unit, col:c, row:r})) return;
+          if(blocking(c,r)) return;
+          unit.col=c; unit.row=r;
+          deploymentDragUnit=null;
+          renderDeploymentScreen();
+        });
+      }
+      
+      grid.appendChild(cell);
+    }
+  }
+  wrap.appendChild(grid);
+}
+
+function renderDeploymentScreen(){
+  hideAllScreens();
+  document.getElementById('screen-deployment').style.display='';
+  renderDeploymentBoard();
+  
+  const info=document.getElementById('deployment-info');
+  const myTeamUnits=units.filter(u=>u.team===myTeam);
+  const allPlaced=myTeamUnits.every(u=>inDeploymentZone(u));
+  info.innerHTML=`<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">
+    ${myTeam==='a'?'🔵 Spieler 1':'🔴 Spieler 2'}<br>
+    Einheiten in Zone: <b>${myTeamUnits.filter(u=>inDeploymentZone(u)).length} / ${myTeamUnits.length}</b>
+  </div>`;
+  
+  const btn=document.getElementById('btn-deployment-confirm');
+  
+  // Wenn ich bestätigt habe
+  if(deploymentConfirmed[myTeam]){
+    btn.disabled=true;
+    btn.textContent='✅ Bestätigt';
+  } else {
+    btn.disabled=!allPlaced;
+    btn.textContent=allPlaced?'✅ Bestätigen':'⏳ Alle Einheiten platzieren…';
+  }
+  
+  if(multiplayerMode && deploymentConfirmed.a && deploymentConfirmed.b){
+    document.getElementById('deployment-waiting').style.display='';
+    btn.style.display='none';
+  } else if(deploymentConfirmed[myTeam]){
+    // Nach Bestätigung warten auf Gegner
+    document.getElementById('deployment-waiting').style.display='';
+    btn.style.display='none';
+  } else {
+    document.getElementById('deployment-waiting').style.display='none';
+    btn.style.display='';
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // RENDER GAME
 // ══════════════════════════════════════════════════════
 function renderBoard(){
@@ -77,7 +220,12 @@ function renderSidebar(){
     const covStr=cov>0?`<span class="cov-badge">+${cov} Deckung</span>`:'';
     const orkStr=sel.orkAtk?'<span style="font-size:10px;color:#3B6D11"> (Treffer: 3+)</span>':'';
     const reanStr=sel.reanimation?'<div class="sr-row"><span>Reanimation</span><span style="color:#0F6E56">5+ kehrt zurück</span></div>':'';
-    uc.innerHTML=`<h3>${sel.e} ${sel.name} <span style="font-size:10px;color:${fac.color}">${fac.icon} ${fac.name}</span></h3>
+    
+    // Gegnerische Einheit kennzeichnen
+    const isOpponent = sel.team !== myTeam;
+    const opponentLabel = isOpponent ? '<div style="font-size:11px;color:#993C1D;margin-bottom:4px;"><b>👁️ Gegnerische Einheit (Scouting)</b></div>' : '';
+    
+    uc.innerHTML=`${opponentLabel}<h3>${sel.e} ${sel.name} <span style="font-size:10px;color:${fac.color}">${fac.icon} ${fac.name}</span></h3>
     <div class="sr-row"><span>HP</span><span>${sel.hp} / ${sel.maxHp}</span></div>
     <div class="sr-row"><span>Bewegung</span><span style="color:#185FA5">${sel.move} Felder</span></div>
     <div class="sr-row"><span>Angriffsreichweite</span><span style="color:#993C1D">${sel.ar} Felder</span></div>
@@ -91,7 +239,7 @@ function renderSidebar(){
     uc.innerHTML='<h3>Keine Einheit gewählt</h3><div style="font-size:11px;color:var(--text-secondary)">Einheit anklicken</div>';
   }
 
-  // actions — im Online-Modus nur wenn man dran ist
+  // actions — im Online-Modus nur wenn man dran ist (außer bei Würfeln)
   const ac=document.getElementById('actions');
   ac.innerHTML='';
 
@@ -100,27 +248,28 @@ function renderSidebar(){
     renderLog(); return;
   }
 
-  // Online: Aktionen sperren wenn Gegner dran ist
-  if(multiplayerMode && turn !== myTeam){
-    const lbl=document.createElement('div');
-    lbl.style.cssText='font-size:12px;color:var(--text-secondary);padding:8px 0;';
-    lbl.textContent='⏳ Warte auf Gegner…';
-    ac.appendChild(lbl);
-    mkBtn(ac,'⏭️ Zug beenden — gesperrt',()=>{});
-    ac.lastChild.disabled=true;
-    renderLog(); return;
-  }
-
+  // Combat: Würfeln erlauben auch wenn nicht dran (für Verteidiger)
   if(combat){
     const{att,def,step,ar,coverBonus:cov}=combat;
     const dp=document.createElement('div'); dp.className='dice-panel';
     const hitThresh=att.orkAtk?3:4;
+    const isAttacker=!multiplayerMode || att.team===myTeam;
+    const isDefender=!multiplayerMode || def.team===myTeam;
+    
     if(step==='roll_atk'){
       dp.innerHTML=`<div class="dice-title">⚔️ <b>${att.e} ${att.name}</b> → <b>${def.e} ${def.name}</b></div>
       <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Würfle <b>${att.atk} Würfel</b> — Treffer bei <b>${hitThresh}+</b></div>`;
-      const b=document.createElement('button'); b.className='act-btn roll-a';
-      b.textContent=`🎲 ${att.atk}W6 Angriff würfeln (Treffer: ${hitThresh}+)`;
-      b.addEventListener('click',rollAtk); dp.appendChild(b);
+      
+      if(isAttacker){
+        const b=document.createElement('button'); b.className='act-btn roll-a';
+        b.textContent=`🎲 ${att.atk}W6 Angriff würfeln (Treffer: ${hitThresh}+)`;
+        b.addEventListener('click',rollAtk); dp.appendChild(b);
+      } else {
+        const lbl=document.createElement('div');
+        lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
+        lbl.textContent='⏳ Gegner würfelt Angriff…';
+        dp.appendChild(lbl);
+      }
     } else if(step==='roll_def'){
       const totalDef=def.def+cov;
       const hits=ar.filter(v=>v>=hitThresh).length;
@@ -136,12 +285,40 @@ function renderSidebar(){
       hint.style.cssText='font-size:11px;color:var(--text-secondary);margin:4px 0 6px;line-height:1.4;';
       hint.innerHTML=`Rüstung würfeln — <b>${totalDef} Würfel</b>${cov>0?` <span class="cov-badge">+${cov} Deckung</span>`:''}, Rettung bei <b>5+</b>`;
       dp.appendChild(hint);
-      const b=document.createElement('button'); b.className='act-btn roll-d';
-      b.textContent=`🛡️ ${totalDef}W6 Rüstung würfeln (Rettung: 5+)`;
-      b.addEventListener('click',rollDef); dp.appendChild(b);
+      
+      if(isDefender){
+        const b=document.createElement('button'); b.className='act-btn roll-d';
+        b.textContent=`🛡️ ${totalDef}W6 Rüstung würfeln (Rettung: 5+)`;
+        b.addEventListener('click',rollDef); dp.appendChild(b);
+      } else {
+        const lbl=document.createElement('div');
+        lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
+        lbl.textContent='⏳ Gegner würfelt Rüstung…';
+        dp.appendChild(lbl);
+      }
     }
     ac.appendChild(dp);
     mkBtn(ac,'✗ Abbrechen',()=>{ combat=null; renderGame(); });
+    renderLog(); return;
+  }
+
+  // Online: Aktionen sperren wenn Gegner dran ist (nur außer Combat)
+  if(multiplayerMode && turn !== myTeam){
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:12px;color:var(--text-secondary);padding:8px 0;';
+    lbl.textContent='⏳ Warte auf Gegner…';
+    ac.appendChild(lbl);
+    mkBtn(ac,'⏭️ Zug beenden — gesperrt',()=>{});
+    ac.lastChild.disabled=true;
+    renderLog(); return;
+  }
+
+  // Gegnerische Einheiten können nicht bewegt/angegriffen werden — nur anschauen
+  if(sel && sel.team !== myTeam){
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
+    lbl.textContent='👁️ Gegnerische Einheit — keine Aktion möglich';
+    ac.appendChild(lbl);
     renderLog(); return;
   }
 
@@ -180,6 +357,54 @@ function renderLog(){
   const el=document.getElementById('log-box');
   if(el) el.innerHTML=logs.map(l=>`<div class="le ${l.cls}">${l.msg}</div>`).join('');
 }
+
+// ══════════════════════════════════════════════════════
+// BOTTOM ACTION BAR (Mobile)
+// ══════════════════════════════════════════════════════
+function renderBottomActionBar(){
+  const bar=document.getElementById('bottom-action-bar');
+  if(!bar) return;
+  bar.innerHTML='';
+  
+  // Online: nichts anzeigen wenn Gegner dran ist
+  if(multiplayerMode && turn !== myTeam){
+    bar.style.display='none';
+    return;
+  }
+  
+  if(phase==='over'){
+    const btn=document.createElement('button');
+    btn.className='action-icon-btn primary';
+    btn.innerHTML='<span style="font-size:16px;">🔄</span><span>Neu starten</span>';
+    btn.addEventListener('click',()=>{ showLobby(); });
+    bar.appendChild(btn);
+    return;
+  }
+  
+  // Phase Switch Buttons
+  const moveBtn=document.createElement('button');
+  moveBtn.className=`action-icon-btn${phase==='move'?' primary':''}`;
+  moveBtn.innerHTML='<span style="font-size:16px;">🚶</span><span>Bewegen</span>';
+  moveBtn.addEventListener('click',()=>{
+    if(phase!=='over'){ phase='move'; sel=null; hlM=[]; hlA=[]; combat=null; renderGame(); }
+  });
+  bar.appendChild(moveBtn);
+  
+  const atkBtn=document.createElement('button');
+  atkBtn.className=`action-icon-btn${phase==='attack'?' primary':''}`;
+  atkBtn.innerHTML='<span style="font-size:16px;">⚔️</span><span>Angreifen</span>';
+  atkBtn.addEventListener('click',()=>{
+    if(phase!=='over'){ phase='attack'; sel=null; hlM=[]; hlA=[]; combat=null; renderGame(); }
+  });
+  bar.appendChild(atkBtn);
+  
+  // End Turn Button
+  const endBtn=document.createElement('button');
+  endBtn.className='action-icon-btn primary';
+  endBtn.innerHTML='<span style="font-size:16px;">⏭️</span><span>Zug beenden</span>';
+  endBtn.addEventListener('click',()=>{ endTurn(); });
+  bar.appendChild(endBtn);
+}
 function renderLegend(){
   const el=document.getElementById('game-legend');
   if(!el||!pickedFactions.a||!pickedFactions.b) return;
@@ -193,9 +418,17 @@ function renderLegend(){
     <div class="leg"><div class="leg-sq" style="background:#85B7EB"></div>Wasser</div>`;
 }
 function renderGame(){
+  // Spiel vorbei — Winner-Screen anzeigen
+  if(phase==='over'){
+    if(typeof showWinnerScreen==='function') showWinnerScreen();
+    return;
+  }
+  
   renderBoard();
   renderSidebar();
   renderLegend();
+  initSidebarTabs();
+  renderBottomActionBar();
 }
 
 // ══════════════════════════════════════════════════════

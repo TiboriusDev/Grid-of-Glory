@@ -143,6 +143,58 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
+     SCREEN 4.5: AUFSTELLUNGSPHASE
+════════════════════════════════════════════════════════ -->
+<div id="screen-deployment" style="display:none;">
+  <div class="layout" style="gap:12px;">
+    <div class="left-col">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="font-size:12px;color:var(--text-muted);">Einheiten platzieren — klick und zieh in die Zone</div>
+        <button id="btn-back-deployment" style="margin-left:auto;">← Zurück</button>
+      </div>
+      <div id="deployment-board-wrap"></div>
+    </div>
+    
+    <div class="sidebar">
+      <div class="card">
+        <h3>Aufstellung</h3>
+        <div id="deployment-info"></div>
+        <button class="big-btn" id="btn-deployment-confirm"
+          style="background:linear-gradient(135deg,#8a6520,#c8973a);border-color:#c8973a;margin-top:12px;">
+          ✅ Bestätigen
+        </button>
+        <div id="deployment-waiting" style="display:none;margin-top:12px;text-align:center;">
+          <div class="pulse-row">
+            <div class="pulse-dot"></div>
+            Warte auf Gegner…
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 5.5: SPIELENDE / GEWINNER
+════════════════════════════════════════════════════════ -->
+<div id="screen-winner" style="display:none;">
+  <div class="card">
+    <h3 id="winner-title">🏆 Spiel vorbei!</h3>
+    <div id="winner-info" style="font-size:14px;margin:20px 0 30px;text-align:center;"></div>
+    <button class="big-btn" id="btn-rematch"
+      style="background:linear-gradient(135deg,#2d5a1b,#4a8a2a);border-color:#4a8a2a;margin-bottom:10px;">
+      🔄 Rematch
+    </button>
+    <button class="big-btn" id="btn-menu-after-game"
+      style="background:linear-gradient(135deg,#1e3a5a,#3a6090);border-color:#3a6090;">
+      🏠 Hauptmenü
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
      SCREEN 5: SPIEL
 ════════════════════════════════════════════════════════ -->
 <div id="screen-game" style="display:none;">
@@ -161,19 +213,39 @@
         <div id="phase-bar"></div>
         <div id="turn-label"></div>
       </div>
-      <div class="card" id="unit-card">
-        <h3>Keine Einheit gewählt</h3>
-        <div style="font-size:11px;color:var(--text-muted);">Einheit anklicken</div>
-      </div>
-      <div class="card">
-        <h3>Aktionen</h3>
-        <div id="actions"></div>
-      </div>
-      <div class="card">
-        <h3>Kampflog</h3>
-        <div class="log-box" id="log-box"></div>
+      
+      <!-- TABBED SIDEBAR -->
+      <div class="card sidebar-tabs-container">
+        <div class="sidebar-tabs" id="sidebar-tabs">
+          <button class="sidebar-tab active" data-tab="unit">Einheit</button>
+          <button class="sidebar-tab" data-tab="actions">Aktionen</button>
+          <button class="sidebar-tab" data-tab="log">Log</button>
+        </div>
+        
+        <!-- TAB: UNIT -->
+        <div id="tab-unit" class="sidebar-tab-content active">
+          <div id="unit-card">
+            <h3>Keine Einheit gewählt</h3>
+            <div style="font-size:11px;color:var(--text-muted);">Einheit anklicken</div>
+          </div>
+        </div>
+        
+        <!-- TAB: ACTIONS -->
+        <div id="tab-actions" class="sidebar-tab-content">
+          <h3 style="margin-bottom:8px;">Aktionen</h3>
+          <div id="actions"></div>
+        </div>
+        
+        <!-- TAB: LOG -->
+        <div id="tab-log" class="sidebar-tab-content">
+          <h3 style="margin-bottom:8px;">Kampflog</h3>
+          <div class="log-box" id="log-box"></div>
+        </div>
       </div>
     </div>
+    
+    <!-- BOTTOM ACTION BAR (Mobile) -->
+    <div class="bottom-action-bar" id="bottom-action-bar"></div>
 
   </div>
 </div>
