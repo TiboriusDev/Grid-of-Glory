@@ -52,9 +52,22 @@ Kampf erst nach Abschluss — Mittelweg.
 
 ---
 
-## Priorität (Vorschlag)
-1. **TODO 5** — UI zuerst, macht alles besser nutzbar
-2. **TODO 4** — Würfeln aufteilen, wichtig für Online-Fairness
-3. **TODO 1** — Sync verbessern
-4. **TODO 3** — Gegner anschauen
-5. **TODO 2** — Rematch
+## 6. Aufstellungsphase vor Spielbeginn
+**Ablauf:**
+- Nach Kartenauswahl: jeder Spieler bekommt eine Aufstellungszone (z.B. die ersten 2-3 Reihen auf seiner Seite)
+- Zone wird farblich markiert — Spieler darf seine Einheiten frei innerhalb dieser Zone platzieren
+- Einheit anklicken → freies Feld in der Zone anklicken → Einheit steht dort
+- Bestätigen-Button wenn alle Einheiten platziert sind
+- Im Online-Modus: beide Spieler stellen gleichzeitig auf, Gegner sieht die Positionen erst wenn beide bestätigt haben (kein Vorteil durch frühe Info)
+- Supabase: `lobby_status` → `deployment` als neuer Schritt zwischen `map` und `playing`
+- Einheitenreihenfolge/Typ bleibt aus dem Roster, nur Position ändert sich
+
+---
+
+## Priorität (aktualisiert)
+1. **TODO 5** — UI überarbeiten
+2. **TODO 4** — Würfeln aufteilen
+3. **TODO 6** — Aufstellungsphase ⬅ neu
+4. **TODO 1** — Sync bei jeder Aktion
+5. **TODO 3** — Gegner anschauen
+6. **TODO 2** — Rematch
