@@ -22,7 +22,7 @@ var realtimeChannel = null;
 // ═══════════════════════════════════════════════════════════════
 
 function hideAllScreens() {
-  ['screen-lobby','screen-waiting','screen-faction','screen-teambuilder',
+  ['screen-lobby','screen-waiting','screen-faction','screen-teambuilder-faction-select','screen-teambuilder',
    'screen-waiting-map','screen-map','screen-deployment','screen-game','screen-winner']
     .forEach(id => {
       const el = document.getElementById(id);

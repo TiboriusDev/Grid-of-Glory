@@ -135,6 +135,24 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
+     SCREEN 1.4: FRAKTION WÄHLEN FÜR TEAM BUILDER
+════════════════════════════════════════════════════════ -->
+<div id="screen-teambuilder-faction-select" style="display:none;">
+  <div class="card" style="max-width:520px;margin:0 auto;">
+    <div class="step-label">Fraktion wählen</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:15px;">
+      Wähle eine Fraktion um dein Team zusammenzustellen
+    </div>
+    <div class="faction-grid" id="teambuilder-faction-grid"></div>
+    <button class="big-btn" id="btn-cancel-faction-select"
+      style="background:rgba(192,64,64,0.15);color:var(--red-light);border:1px solid rgba(192,64,64,0.3);margin-top:10px;">
+      ✗ Abbrechen
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
      SCREEN 1.5: TEAM BUILDER
 ════════════════════════════════════════════════════════ -->
 <div id="screen-teambuilder" style="display:none;">
@@ -398,14 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('btn-teambuilder-lobby').addEventListener('click', () => {
-    // Fraktion wählen vor Team-Builder
-    const faction = prompt('Fraktion wählen:\n1 = marines\n2 = orks\n3 = eldar\n4 = necrons\n\nEingabe (1-4):');
-    const factions = ['marines', 'orks', 'eldar', 'necrons'];
-    const factionKey = factions[parseInt(faction) - 1];
-    
-    if (factionKey) {
-      showTeamBuilder(factionKey);
-    }
+    showTeamBuilderFactionSelect();
+  });
+  
+  document.getElementById('btn-cancel-faction-select').addEventListener('click', () => {
+    hideAllScreens();
+    showLobby();
   });
   
   document.getElementById('btn-teambuilder-save').addEventListener('click', saveCurrentTeam);

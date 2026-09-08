@@ -10,6 +10,37 @@ let currentTeamName = '';
 let currentTeamUnits = []; // [{ id: 'sm1', name: 'Tactical Marine', ... }, ...]
 
 // ── SCREEN VERWALTUNG ──────────────────────────────────
+function showTeamBuilderFactionSelect() {
+  hideAllScreens();
+  document.getElementById('screen-teambuilder-faction-select').style.display = '';
+  renderTeamBuilderFactionSelect();
+}
+
+function renderTeamBuilderFactionSelect() {
+  const container = document.getElementById('teambuilder-faction-grid');
+  container.innerHTML = '';
+  
+  Object.entries(FACTIONS).forEach(([key, faction]) => {
+    const card = document.createElement('div');
+    card.className = 'faction-card';
+    card.innerHTML = `
+      <div style="font-size:24px;margin-bottom:6px;">${faction.icon}</div>
+      <div class="faction-name">${faction.name}</div>
+      <div class="faction-trait">${faction.trait}</div>
+      <div class="faction-desc" style="font-size:10px;margin-bottom:8px;">${faction.traitDesc}</div>
+      <button class="big-btn" style="width:100%;background:linear-gradient(135deg,#8a6520,#c8973a);border-color:#c8973a;font-size:11px;">
+        Wählen
+      </button>
+    `;
+    
+    card.querySelector('button').addEventListener('click', () => {
+      showTeamBuilder(key);
+    });
+    
+    container.appendChild(card);
+  });
+}
+
 function showTeamBuilder(faction) {
   hideAllScreens();
   document.getElementById('screen-teambuilder').style.display = '';
