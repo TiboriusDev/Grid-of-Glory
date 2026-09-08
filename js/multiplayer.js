@@ -124,6 +124,12 @@ function generateCode() {
 }
 
 async function createRoom() {
+  // ⚠️ Auth Check
+  if (!currentUser) {
+    alert('❌ Du musst angemeldet sein um Online zu spielen!');
+    return;
+  }
+
   const code = generateCode();
   const { error } = await sb.from('games').insert({
     room_code:    code,
@@ -146,6 +152,14 @@ async function createRoom() {
 }
 
 async function joinRoom(code) {
+  // ⚠️ Auth Check
+  if (!currentUser) {
+    alert('❌ Du musst angemeldet sein um Online zu spielen!');
+    document.getElementById('join-error').style.display = '';
+    document.getElementById('join-error').textContent   = '❌ Du musst angemeldet sein!';
+    return;
+  }
+
   const { data, error } = await sb
     .from('games').select('*')
     .eq('room_code', code.toUpperCase()).single();

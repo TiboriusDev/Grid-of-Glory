@@ -928,6 +928,11 @@ h2.sr-only {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .card {
   animation: fadeIn 0.2s ease;
 }

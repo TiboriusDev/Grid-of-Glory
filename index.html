@@ -9,9 +9,63 @@
 <body>
 
 <!-- ═══════════════════════════════════════════════════════
+     SCREEN -1: AUTH / LOGIN
+════════════════════════════════════════════════════════ -->
+<div id="screen-auth" style="display:block;">
+  <div class="card" style="max-width:400px;margin:50px auto;">
+    <h3 style="text-align:center;margin-bottom:30px;">⚔️ Grid of Glory</h3>
+    
+    <div id="auth-loading" style="display:none;text-align:center;margin:30px 0;">
+      <div style="font-size:24px;animation:spin 1s linear infinite;">⟳</div>
+      <div style="margin-top:10px;color:var(--text-muted);">Wird geladen...</div>
+    </div>
+
+    <div id="auth-error" style="color:var(--red-light);margin-bottom:15px;font-size:12px;min-height:20px;"></div>
+
+    <!-- DISCORD LOGIN -->
+    <div style="margin-bottom:25px;">
+      <button class="big-btn" id="btn-discord-login"
+        style="background:linear-gradient(135deg,#5865f2,#4752c4);border-color:#4752c4;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span style="font-size:18px;">🎮</span> Mit Discord anmelden
+      </button>
+    </div>
+
+    <div style="text-align:center;color:var(--text-muted);font-size:12px;margin:20px 0;position:relative;">
+      <span style="position:relative;z-index:1;background:var(--bg-card);padding:0 8px;">oder mit Email</span>
+      <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.1);z-index:0;"></div>
+    </div>
+
+    <!-- EMAIL LOGIN -->
+    <div style="margin-bottom:15px;">
+      <input type="email" id="auth-email" placeholder="Email"
+        style="width:100%;padding:10px;margin-bottom:10px;background:var(--bg-card2);border:1px solid rgba(255,255,255,0.1);color:white;border-radius:4px;font-size:14px;">
+      <input type="password" id="auth-password" placeholder="Passwort"
+        style="width:100%;padding:10px;background:var(--bg-card2);border:1px solid rgba(255,255,255,0.1);color:white;border-radius:4px;font-size:14px;">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="big-btn" id="btn-email-login" style="flex:1;background:linear-gradient(135deg,#1e3a5a,#3a6090);border-color:#3a6090;">
+        Anmelden
+      </button>
+      <button class="big-btn" id="btn-email-signup" style="flex:1;background:linear-gradient(135deg,#2d5a1b,#4a8a2a);border-color:#4a8a2a;">
+        Registrieren
+      </button>
+    </div>
+
+    <div style="text-align:center;font-size:11px;color:var(--text-muted);">
+      💾 Dein Team wird automatisch in der Cloud gespeichert
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
      SCREEN 0: LOBBY
 ════════════════════════════════════════════════════════ -->
 <div id="screen-lobby" style="display:none;">
+  <div style="position:absolute;top:10px;right:10px;display:flex;gap:10px;align-items:center;">
+    <div id="user-display" style="font-size:12px;color:var(--text-muted);">👤 Spieler</div>
+    <button id="btn-logout" style="font-size:11px;padding:6px 10px;background:rgba(192,64,64,0.2);border:1px solid rgba(192,64,64,0.4);color:var(--red-light);border-radius:3px;cursor:pointer;">🚪 Logout</button>
+  </div>
   <div class="card">
     <h3>⚔️ Grid of Glory</h3>
     <div class="lobby-subtitle">Taktisches Raster-Strategiespiel</div>
@@ -259,12 +313,37 @@
      SCRIPTS
 ════════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
 <script src="js/factions.js"></script>
 <script src="js/maps.js"></script>
 <script src="js/game.js"></script>
 <script src="js/render.js"></script>
 <script src="js/multiplayer.js"></script>
-<script>showLobby();</script>
+
+<!-- AUTH EVENT LISTENERS -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Discord Login
+  document.getElementById('btn-discord-login').addEventListener('click', loginWithDiscord);
+  
+  // Email Login
+  document.getElementById('btn-email-login').addEventListener('click', loginEmail);
+  
+  // Email Signup
+  document.getElementById('btn-email-signup').addEventListener('click', signupEmail);
+  
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', logout);
+
+  // Enter-Taste in Email-Feldern
+  document.getElementById('auth-email').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') loginEmail();
+  });
+  document.getElementById('auth-password').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') loginEmail();
+  });
+});
+</script>
 
 </body>
 </html>
