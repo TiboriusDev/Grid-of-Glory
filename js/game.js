@@ -185,11 +185,28 @@ function selUnit(u){
 
 function clickCell(c,r){
   if(phase==='over') return;
-  // Online: nichts tun wenn Gegner dran ist
-  if(multiplayerMode && turn !== myTeam) return;
+  // Online: nichts tun wenn Gegner dran ist (außer Gegner-Einheiten anschauen)
+  if(multiplayerMode && turn !== myTeam) {
+    // Aber: Gegner-Einheiten können angeschaut werden
+    const occ = uAt(c,r);
+    if(occ && alive(occ)) { selUnit(occ); return; }
+    return;
+  }
   if(combat&&combat.step!=='roll_atk') return;
   const occ=uAt(c,r);
-  if(occ&&occ.team===turn&&alive(occ)){ selUnit(occ); return; }
+  // Kann JEDE Einheit anschauen (eigne & gegnerische)
+  if(occ&&alive(occ)){ 
+    // Wenn gegnerische Einheit und kein Combat gerade: nur anschauen
+    if(occ.team!==turn && !combat) {
+      selUnit(occ); 
+      return;
+    }
+    // Wenn eigne Einheit: normal behandeln
+    if(occ.team===turn) { 
+      selUnit(occ); 
+      return; 
+    }
+  }
   if(sel){
     if(phase==='move'&&!sel.moved){
       if(hlM.some(([hc,hr])=>hc===c&&hr===r)){
