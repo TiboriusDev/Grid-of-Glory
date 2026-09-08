@@ -223,7 +223,6 @@ async function saveTeam(teamName, factionA, factionB, units) {
       user_id: currentUser.id,
       team_name: teamName,
       faction_a: factionA,
-      faction_b: factionB,
       units: JSON.stringify(units)
     }).select();
 

@@ -134,7 +134,6 @@ async function saveCurrentTeam() {
       user_id: currentUser.id,
       team_name: teamName,
       faction_a: teamBuilderFaction,
-      faction_b: null, // wird später konfiguriert
       units: JSON.stringify(currentTeamUnits),
       created_at: new Date().toISOString()
     }).select();
