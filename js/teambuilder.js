@@ -11,6 +11,10 @@ let currentTeamUnits = []; // [{ id: 'sm1', name: 'Tactical Marine', ... }, ...]
 
 // ── SCREEN VERWALTUNG ──────────────────────────────────
 function showTeamBuilderFactionSelect() {
+  if (typeof hideAllScreens === 'undefined') {
+    console.error('hideAllScreens ist noch nicht geladen!');
+    return;
+  }
   hideAllScreens();
   document.getElementById('screen-teambuilder-faction-select').style.display = '';
   renderTeamBuilderFactionSelect();
