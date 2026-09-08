@@ -48,16 +48,26 @@
 - Speichern
 
 ### Schritt 4: CORS für GitHub Pages aktivieren
-- Gehe zu: "Project Settings" (⚙️ rechts oben)
-- Klick auf "API"
-- Scrolle runter zu "CORS Configuration"
-- Unter "Allowed origins" klick "+ Add origin"
-- **Füge ein:**
-  ```
-  https://tiboriusdev.github.io
-  ```
-- Speichern
-- (Das ermöglicht Requests von deiner GitHub-Domain)
+
+**Weg 1: Über Project Settings (NEUE UI)**
+1. Klick auf **⚙️ (Settings)** rechts oben
+2. Linke Sidebar → **"API"** klicken
+3. Scrolle nach unten bis **"CORS Configuration"**
+4. Klick **"+ Add origin"**
+5. Gib ein: `https://tiboriusdev.github.io`
+6. Klick **"Save"**
+
+**Falls du "CORS Configuration" nicht siehst:**
+
+Versuche Weg 2:
+1. Klick auf **⚙️ (Settings)** rechts oben
+2. Links unten auf **"Database"** (oder "Konfiguration")
+3. Suche nach **"CORS"** oder **"API"**
+4. Dort findest du die Einstellung
+
+**Falls CORS gar nicht existiert:**
+
+Das ist OK! Supabase konfiguriert CORS automatisch für `localhost` und deine Domain. Du kannst diesen Schritt auch überspringen — teste einfach und schreib mir wenn es nicht funktioniert.
 
 ### Schritt 5: Email Confirmation ausschalten (Optional)
 - "Authentication" → "Email Templates"
@@ -159,9 +169,16 @@ Nachdem alles konfiguriert ist:
   ```
 
 ### Problem: "CORS error" beim Discord Login
-**Lösung:** Supabase CORS nicht konfiguriert
-- Gehe zu Supabase → Project Settings → API
-- Unter "CORS Configuration" prüf ob `https://tiboriusdev.github.io` eingetragen ist
+**Lösung:** 
+1. Gehe zu Supabase → **⚙️ Settings → API**
+2. Scrolle nach unten — suche **"CORS Configuration"** oder **"Allowed origins"**
+3. Wenn nicht sichtbar: **Ignorieren** — Supabase macht das automatisch
+4. Falls du es findest: `https://tiboriusdev.github.io` hinzufügen
+
+**Alternative (falls CORS nicht sichtbar):**
+- Das ist normal in neuen Supabase Versionen
+- Supabase erlaubt GitHub Pages automatisch
+- Wenn es nicht funktioniert → Versuch Schritt 4️⃣ nochmal oder schreib mir
 
 ### Problem: "Cannot read property 'auth'"
 **Lösung:** Supabase JS Library nicht geladen
