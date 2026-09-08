@@ -35,7 +35,7 @@ async function loginWithDiscord() {
     const { data, error } = await sb.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: 'https://tiboriusdev.github.io/Grid-of-Glory/'
       }
     });
     
