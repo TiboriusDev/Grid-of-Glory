@@ -946,3 +946,123 @@ h2.sr-only {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #4a4540; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #5a5550; }
+
+
+/* ═══════════════════════════════════════════════════════
+   TEAM BUILDER SCREEN
+════════════════════════════════════════════════════════ */
+
+#screen-teambuilder .card {
+  max-width: 100%;
+}
+
+.teambuilder-unit-card {
+  border: 2px solid #3a3630;
+  border-radius: 8px;
+  padding: 8px;
+  background: #211f1a;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.teambuilder-unit-card:hover {
+  border-color: #4a4540;
+  background: #2a2820;
+  transform: translateY(-2px);
+}
+
+.teambuilder-unit-card.selected {
+  border-color: #c8973a;
+  background: rgba(200,151,58,0.1);
+}
+
+.unit-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e8e0d0;
+  margin-bottom: 4px;
+}
+
+.unit-stats {
+  font-size: 9px;
+  color: #9a9080;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-action-btn {
+  width: 100%;
+  padding: 4px;
+  font-size: 9px;
+  background: #2d5a1b;
+  color: #a8d88a;
+  border: 1px solid #4a8a2a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-weight: 600;
+}
+
+.unit-action-btn:hover:not(:disabled) {
+  background: #3a7a2a;
+  border-color: #5aaa3a;
+}
+
+.unit-action-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.team-empty {
+  padding: 20px;
+  text-align: center;
+  color: #6a6058;
+  font-size: 12px;
+}
+
+.team-list {
+  background: #0f0e0c;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.team-unit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #3a3630;
+  font-size: 11px;
+  color: #e8e0d0;
+}
+
+.team-unit-item:last-child {
+  border-bottom: none;
+}
+
+.remove-btn {
+  background: rgba(192,64,64,0.3);
+  color: #e05050;
+  border: 1px solid rgba(192,64,64,0.5);
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 600;
+  transition: all 0.1s;
+}
+
+.remove-btn:hover {
+  background: rgba(192,64,64,0.5);
+  border-color: #e05050;
+}
+
+#screen-teambuilder .sidebar .card h3 {
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
+}

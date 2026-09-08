@@ -74,6 +74,11 @@
     <h3>⚔️ Grid of Glory</h3>
     <div class="lobby-subtitle">Taktisches Raster-Strategiespiel</div>
 
+    <button class="big-btn" id="btn-teambuilder-lobby"
+      style="background:linear-gradient(135deg,#6b2fa0,#8a4ab8);border-color:#8a4ab8;margin-bottom:8px;">
+      🛠️ Team zusammenstellen
+    </button>
+
     <button class="big-btn" id="btn-local"
       style="background:linear-gradient(135deg,#1e3a5a,#3a6090);border-color:#3a6090;">
       🖥️ Lokal spielen — 2 Spieler, 1 Gerät
@@ -129,6 +134,48 @@
       style="background:rgba(192,64,64,0.15);color:var(--red-light);border:1px solid rgba(192,64,64,0.3);">
       ✗ Abbrechen
     </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 1.5: TEAM BUILDER
+════════════════════════════════════════════════════════ -->
+<div id="screen-teambuilder" style="display:none;">
+  <div class="layout" style="gap:12px;">
+    <div class="left-col">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <div id="teambuilder-faction" style="font-size:13px;font-weight:600;color:var(--gold);"></div>
+        <button id="btn-back-teambuilder" style="margin-left:auto;font-size:11px;padding:5px 12px;">← Zurück</button>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:8px;">Verfügbare Einheiten</h4>
+        <div id="teambuilder-available" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;"></div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>Team zusammenstellen</h3>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
+          <span id="teambuilder-count">0/6 Einheiten</span>
+        </div>
+        
+        <div id="teambuilder-current" style="margin-bottom:12px;max-height:200px;overflow-y:auto;"></div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="big-btn" id="btn-teambuilder-save"
+            style="flex:1;background:linear-gradient(135deg,#2d5a1b,#4a8a2a);border-color:#4a8a2a;font-size:11px;">
+            💾 Speichern
+          </button>
+          <button class="big-btn" id="btn-teambuilder-start"
+            style="flex:1;background:linear-gradient(135deg,#8a6520,#c8973a);border-color:#c8973a;font-size:11px;">
+            ⚔️ Spielen
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -321,10 +368,11 @@
 <script src="js/maps.js"></script>
 <script src="js/game.js"></script>
 <script src="js/render.js"></script>
+<script src="js/teambuilder.js"></script>
 <script src="js/multiplayer.js"></script>
 <script src="js/auth.js"></script>
 
-<!-- AUTH EVENT LISTENERS -->
+<!-- AUTH & TEAMBUILDER EVENT LISTENERS -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // Discord Login
@@ -345,6 +393,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('auth-password').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') loginEmail();
+  });
+
+  // Team-Builder Events
+  document.getElementById('btn-back-teambuilder').addEventListener('click', () => {
+    hideTeamBuilder();
+    showLobby();
+  });
+  
+  document.getElementById('btn-teambuilder-lobby').addEventListener('click', () => {
+    // Fraktion wählen vor Team-Builder
+    const faction = prompt('Fraktion wählen:\n1 = marines\n2 = orks\n3 = eldar\n4 = necrons\n\nEingabe (1-4):');
+    const factions = ['marines', 'orks', 'eldar', 'necrons'];
+    const factionKey = factions[parseInt(faction) - 1];
+    
+    if (factionKey) {
+      showTeamBuilder(factionKey);
+    }
+  });
+  
+  document.getElementById('btn-teambuilder-save').addEventListener('click', saveCurrentTeam);
+  
+  document.getElementById('btn-teambuilder-start').addEventListener('click', () => {
+    if (applyTeamToGame()) {
+      hideTeamBuilder();
+      showFactionScreen();
+    }
   });
 });
 </script>
