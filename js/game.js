@@ -148,18 +148,30 @@ async function rollAtkSecure(){
   try {
     if (!currentRoom) {
       addLog('❌ Keine aktive Spielsitzung','err');
+      console.error('rollAtkSecure: currentRoom ist undefined', currentRoom);
+      return false;
+    }
+
+    if (!combat) {
+      addLog('❌ Kein Combat aktiv','err');
+      console.error('rollAtkSecure: combat ist undefined', combat);
       return false;
     }
 
     const diceCount = combat.att.atk;
-    
-    // 🔒 SERVER WÜRFELT!
-    const diceResult = await callEdgeFunction('roll-dice', {
+    const payload = {
       game_id: currentRoom.id,
       move_id: combat.moveId || 'temp_' + Date.now(), // Temp ID bis Move gespeichert
       roll_type: 'attack',
       dice_count: diceCount
-    });
+    };
+    
+    console.log('🎲 rollAtkSecure - Payload:', payload);
+    
+    // 🔒 SERVER WÜRFELT!
+    const diceResult = await callEdgeFunction('roll-dice', payload);
+
+    console.log('🎲 rollAtkSecure - Ergebnis:', diceResult);
 
     // Echte Würfel vom Server verwenden!
     combat.ar = diceResult.rolls;
@@ -173,7 +185,7 @@ async function rollAtkSecure(){
 
   } catch (error) {
     addLog(`❌ Würfel-Fehler: ${error.message}`,'err');
-    console.error(error);
+    console.error('rollAtkSecure Error:', error);
     return false;
   }
 }
