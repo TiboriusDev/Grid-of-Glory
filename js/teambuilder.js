@@ -240,15 +240,15 @@ async function applyTeam(teamId) {
       .eq('user_id', currentUser.id)
       .single();
     
-    if 🔒 Team anwenden - Lade nur die Unit-IDs!
+    if (error) {
+      alert('❌ Team nicht gefunden!');
+      return;
+    }
+    
+    // 🔒 Team anwenden - Lade nur die Unit-IDs!
     const unitIds = JSON.parse(data.unit_ids);
     currentTeamUnits = unitIds; // ['unit_1', 'unit_2', ...]
-    teamBuilderFaction = data.faction
-    
-    // Team anwenden
-    const units = JSON.parse(data.units);
-    currentTeamUnits = units;
-    teamBuilderFaction = data.faction_a;
+    teamBuilderFaction = data.faction;
     currentTeamName = data.team_name;
     
     console.log('✅ Team angewendet:', currentTeamName);
