@@ -603,7 +603,7 @@ async function startGameAfterDeployment() {
 
   const { error } = await sb.from('game_sessions')
     .update({
-      status: 'playing',
+      status: 'in_progress',
       game_state:   state,
       deployment_state: null
     })
