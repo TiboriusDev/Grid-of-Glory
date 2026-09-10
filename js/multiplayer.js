@@ -311,14 +311,27 @@ async function joinRoom(code) {
   currentGameId   = data.id;  // 🆕 Speichere die echte game_id
   console.log('✅ Raum beigetreten:', { code: currentRoom, currentGameId });
 
-// Update player_b in database
-await sb.from('game_sessions')
+	// Update player_b in database
+	await sb.from('game_sessions')
+	.update({ 
+		player_b: currentUser.id,
+		status: 'factions'  // 🆕 Status wechseln damit Update triggert
+	})
+	.eq('room_code', currentRoom);
+
+	// Update player_b in database
+const { error: updateError } = await sb.from('game_sessions')
   .update({ 
     player_b: currentUser.id,
-    status: 'factions'  // 🆕 Status wechseln damit Update triggert
+    status: 'factions'
   })
   .eq('room_code', currentRoom);
 
+if (updateError) {
+  console.error('❌ UPDATE FEHLER:', updateError);
+} else {
+  console.log('✅ UPDATE gemacht - player_b gespeichert');
+}
   subscribeToRoom(currentRoom);
   showFactionScreen();
 }
