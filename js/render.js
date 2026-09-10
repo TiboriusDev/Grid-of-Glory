@@ -244,7 +244,11 @@ function renderSidebar(){
 
   // unit card
   const uc=document.getElementById('unit-card');
-  if(sel){
+  
+  // 🔒 Im Combat: KEINE Unit-Info anzeigen, nur Würfel!
+  if(combat) {
+    uc.innerHTML=''; // Leer während Combat
+  } else if(sel){
     const fac=FACTIONS[sel.factionKey];
     const cov=coverBonus(sel);
     const covStr=cov>0?`<span class="cov-badge">+${cov} Deckung</span>`:'';
