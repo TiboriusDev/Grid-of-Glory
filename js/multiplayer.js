@@ -107,11 +107,19 @@ async function reconnectToActiveGame() {
   if (!currentUser) return;
   
   try {
-    const { data: games } = await sb
-      .from('games')
+    // 🔍 Suche nach aktiven Spielen wo User player_a oder player_b ist
+    const { data: games, error } = await sb
+      .from('game_sessions')
       .select('*')
       .or(`player_a.eq.${currentUser.id},player_b.eq.${currentUser.id}`)
-      .in('lobby_status', ['faction', 'teambuilder', 'map', 'deployment', 'game', 'over']);
+      .in('status', ['waiting', 'in_progress'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ Reconnect Query Error:', error);
+      return;
+    }
     
     if (!games || games.length === 0) return;
     
@@ -124,9 +132,12 @@ async function reconnectToActiveGame() {
     console.log('🔄 Reconnect: Ins Spiel ' + currentRoom + ' zurück!');
     subscribeToRoom(currentRoom);
     
-    if (game.lobby_status === 'game') showGame();
-    else if (game.lobby_status === 'deployment') showDeployment();
-    else showFactionScreen();
+    // 🎮 Zur korrekten Seite springen
+    if (game.status === 'in_progress') {
+      showGame();
+    } else {
+      showFactionScreen();
+    }
   } catch (err) { 
     console.error('Reconnect Error:', err); 
   }
