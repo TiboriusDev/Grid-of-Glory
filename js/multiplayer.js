@@ -373,6 +373,8 @@ async function startRematch() {
 function subscribeToRoom(code) {
   if (realtimeChannel) realtimeChannel.unsubscribe();
 
+  console.log('📡 subscribeToRoom - Filter:', `room_code=eq.${code}`);
+  
   realtimeChannel = sb
     .channel(`room:${code}`)
     .on('postgres_changes', {
@@ -381,6 +383,7 @@ function subscribeToRoom(code) {
       table:  'game_sessions',
       filter: `room_code=eq.${code}`
     }, payload => {
+      console.log('🔔 REALTIME UPDATE EMPFANGEN:', payload);
       handleRoomUpdate(payload.new);
     })
     .subscribe(status => {
@@ -389,12 +392,17 @@ function subscribeToRoom(code) {
 }
 
 function handleRoomUpdate(row) {
-  console.log('Update:', row.status, 'team:', myTeam);
+  console.log('📍 handleRoomUpdate called with status:', row.status, 'team:', myTeam);
+  console.log('🔍 Full row:', row);
 
   // ── Lobby-Phase: Völker wählen ──
   if (row.status === 'factions') {
+    console.log('✓ Status ist "factions"');
     // Spieler A geht zur Völkerwahl wenn B beigetreten ist
-    if (myTeam === 'a') showFactionScreen();
+    if (myTeam === 'a') {
+      console.log('🎬 showFactionScreen() wird aufgerufen für Team A');
+      showFactionScreen();
+    }
     // Fortschritt aktualisieren
     updateFactionProgress(row);
     // Wenn beide gewählt haben → A setzt Status auf 'map'
