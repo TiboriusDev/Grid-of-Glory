@@ -373,7 +373,7 @@ function subscribeToRoom(code) {
     .on('postgres_changes', {
       event:  'UPDATE',
       schema: 'public',
-      table:  'games',
+      table:  'game_sessions',
       filter: `room_code=eq.${code}`
     }, payload => {
       handleRoomUpdate(payload.new);
