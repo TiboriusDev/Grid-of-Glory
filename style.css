@@ -58,22 +58,26 @@ h2.sr-only {
    GAME LAYOUT â€” RESPONSIVE
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
+/* Einheitliches, mobiles Layout fuer alle Bildschirmgroessen */
 .game-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  gap: 0;
+  min-height: 100vh;
+  padding-bottom: 100px; /* Platz fuer die fixierte Action-Bar unten */
 }
 
 .game-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(180deg, rgba(26,24,20,0.9), rgba(26,24,20,0.7));
+  background: linear-gradient(180deg, rgba(15,14,12,0.97), rgba(15,14,12,0.88));
   border-bottom: 2px solid #3a3630;
-  padding: 12px 16px;
+  padding: 10px 14px;
+  backdrop-filter: blur(8px);
   flex-shrink: 0;
 }
 
@@ -110,100 +114,40 @@ h2.sr-only {
   border-color: #5a8ac0;
 }
 
-/* MAIN GAME CONTAINER */
+/* MAIN GAME CONTAINER - alles zentriert untereinander, wie eine App */
 .game-main {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1;
-  overflow: auto;
-  padding: 12px;
   align-items: center;
-  justify-content: flex-start;
+  padding: 12px;
+  width: 100%;
 }
 
 .game-board-container {
   width: 100%;
-  max-width: 800px;
-  min-height: 400px;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow: auto;
 }
 
 .board-wrap {
   width: 100%;
-  height: 500px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   background: rgba(0,0,0,0.4);
   border: 1px solid #3a3630;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.game-sidebar {
-  width: 100%;
-  max-width: 800px;
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  min-width: 0;
-}
-
-/* â”€â”€ MOBILE RESPONSIVE â”€â”€ */
-@media (max-width: 1024px) {
-  .game-board-container {
-    max-width: 100%;
-  }
-  
-  .game-sidebar {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 680px) {
-  .game-layout {
-    height: auto;
-    min-height: 100vh;
-  }
-  
-  .game-main {
-    gap: 12px;
-    padding: 12px;
-    overflow: visible;
-  }
-  
-  .game-board-container {
-    flex: 0 0 auto;
-    max-width: 100%;
-    min-height: 300px;
-    margin: 0;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  
-  .board-wrap {
-    min-height: 250px;
-  }
-  
-  .game-sidebar {
-    max-width: 100%;
-  }
-  
-  .bottom-action-bar {
-    display: flex !important;
-    gap: 8px;
-  }
-  
-  body {
-    padding-bottom: 120px;
-  }
+@media (max-width: 480px) {
+  .game-top-bar { padding: 8px 10px; }
+  .game-main { padding: 8px; gap: 10px; }
 }
 
 .sr-row {
@@ -449,15 +393,15 @@ h2.sr-only {
 
 .act-btn {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid #3a3630;
   background: #211f1a;
   color: #e8e0d0;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   display: block;
   transition: all 0.15s;
   line-height: 1.4;
@@ -524,10 +468,10 @@ h2.sr-only {
   background: rgba(0,0,0,0.3);
   border: 1px solid #3a3630;
   border-radius: 8px;
-  padding: 6px 8px;
-  height: 110px;
+  padding: 8px 10px;
+  height: 130px;
   overflow-y: auto;
-  font-size: 11px;
+  font-size: 12px;
   scrollbar-width: thin;
   scrollbar-color: #4a4540 transparent;
 }
@@ -555,9 +499,9 @@ h2.sr-only {
 .game-info-sections {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  max-width: 800px;
+  max-width: 480px;
 }
 
 .info-card {
@@ -594,18 +538,6 @@ h2.sr-only {
   overflow-y: auto;
 }
 
-/* â”€ Alte Tab-Styles entfernen â”€ */
-.sidebar-tabs-container {
-  display: none !important;
-}
-
-.sidebar-tabs,
-.sidebar-tab,
-.sidebar-tab-content {
-  display: none !important;
-}
-}
-
 /* Kompaktere Unit-Card Info */
 #unit-card .sr-row {
   font-size: 10px;
@@ -621,42 +553,37 @@ h2.sr-only {
 .bottom-action-bar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(180deg, rgba(26,24,20,0.8), rgba(26,24,20,0.95));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  background: linear-gradient(180deg, rgba(26,24,20,0.85), rgba(18,17,14,0.98));
   border-top: 2px solid #4a4540;
   backdrop-filter: blur(10px);
-  padding: 8px 12px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
   z-index: 999;
   gap: 8px;
   flex-wrap: wrap;
-  display: none;
   transition: opacity 0.2s;
-}
-
-@media (max-width: 680px) {
-  .bottom-action-bar {
-    display: flex !important;
-  }
-  body {
-    padding-bottom: 100px;
-  }
 }
 
 .action-icon-btn {
   flex: 1;
   min-width: 80px;
+  min-height: 52px;
   padding: 10px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #4a4540;
   background: #211f1a;
   color: #e8e0d0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   transition: all 0.15s;
   text-transform: uppercase;
@@ -675,7 +602,7 @@ h2.sr-only {
   background: linear-gradient(135deg, #8a6520, #c8973a);
   border-color: #c8973a;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
 }
 .action-icon-btn.primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #9a7530, #d8a84a);
@@ -766,21 +693,13 @@ h2.sr-only {
    PHASE BAR
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
+/* Phase-Umschaltung passiert ueber die Bottom Action Bar */
 #phase-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-/* Auf Mobile: Phase-Bar verstecken (Bottom Action Bar zeigt sie) */
-@media (max-width: 680px) {
-  #phase-bar {
-    display: none;
-  }
+  display: none;
 }
 
 #turn-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -1077,22 +996,7 @@ h2.sr-only {
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 #screen-game {
-  padding: 4px 0;
-}
-
-#btn-back {
-  font-size: 11px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1px solid #4a4540;
-  background: #211f1a;
-  color: #9a9080;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-#btn-back:hover {
-  border-color: #c04040;
-  color: #e05050;
+  padding: 0;
 }
 
 #unit-card h3 {
@@ -1103,9 +1007,9 @@ h2.sr-only {
 }
 
 /* Terrain icons im Board */
-.cell.t-wall::before   { content: 'ðŸ§±'; font-size: 16px; }
-.cell.t-cover::before  { content: 'ðŸŒ¿'; font-size: 12px; opacity: 0.6; }
-.cell.t-water::before  { content: 'ðŸŒŠ'; font-size: 14px; }
+.cell.t-wall::before   { content: '🧱'; font-size: 16px; }
+.cell.t-cover::before  { content: '🌿'; font-size: 12px; opacity: 0.6; }
+.cell.t-water::before  { content: '🌊'; font-size: 14px; }
 
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
