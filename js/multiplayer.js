@@ -13,7 +13,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // var damit kein Redeclaration-Fehler mit anderen Scripts
 var multiplayerMode = false;
 var myTeam          = null;
-var currentRoom     = null;
+var currentRoom     = null;  // room_code (z.B. "ABC123")
+var currentGameId   = null;  // 🆕 Die echte game_id von Supabase
 var realtimeChannel = null;
 
 // ═══════════════════════════════════════════════════════════════
@@ -207,22 +208,26 @@ async function createRoom() {
   }
 
   const code = generateCode();
-  const { error } = await sb.from('games').insert({
+  const { data, error } = await sb.from('games').insert({
     room_code:    code,
     lobby_status: 'waiting',
     faction_a:    null,
     faction_b:    null,
     map_config:   null,
     game_state:   null
-  });
+  }).select().single();  // 🆕 Hole die eingefügte Reihe mit ID zurück
+  
   if (error) {
     console.error('Raum erstellen fehlgeschlagen:', error.message);
     alert('Fehler beim Erstellen des Raums.');
     return;
   }
+  
   multiplayerMode = true;
   myTeam          = 'a';
   currentRoom     = code;
+  currentGameId   = data.id;  // 🆕 Speichere die echte game_id
+  console.log('✅ Raum erstellt:', { code, currentGameId });
   subscribeToRoom(code);
   showWaiting(code);
 }
@@ -254,6 +259,8 @@ async function joinRoom(code) {
   multiplayerMode = true;
   myTeam          = 'b';
   currentRoom     = code.toUpperCase();
+  currentGameId   = data.id;  // 🆕 Speichere die echte game_id
+  console.log('✅ Raum beigetreten:', { code: currentRoom, currentGameId });
 
   await sb.from('games')
     .update({ lobby_status: 'factions' })
