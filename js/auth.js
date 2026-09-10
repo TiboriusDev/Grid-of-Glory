@@ -169,9 +169,7 @@ async function checkAuthStatus() {
       // // await reconnectToActiveGame();
       
       // Falls kein aktives Spiel: Zur Lobby
-      if (!document.getElementById('screen-lobby').style.display) {
-        showLobby();
-      }
+      showLobby();
       console.log('✅ Angemeldet als:', currentUser.email || currentUser.user_metadata?.name);
     } else {
       currentUser = null;
@@ -211,9 +209,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     // await reconnectToActiveGame();
     
     // Falls kein aktives Spiel: Zur Lobby
-    if (!document.getElementById('screen-lobby').style.display) {
-      showLobby();
-    }
+    showLobby();
   } else if (event === 'SIGNED_OUT') {
     currentUser = null;
     showAuthScreen();
@@ -280,3 +276,5 @@ window.addEventListener('load', () => {
   console.log('🚀 Auth-System wird initialisiert...');
   checkAuthStatus();
 });
+
+
