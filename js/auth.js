@@ -166,7 +166,7 @@ async function checkAuthStatus() {
       updateUserDisplay();
       
       // 🔄 Versuche ins aktives Spiel zurück zu kehren (falls vorhanden)
-      await reconnectToActiveGame();
+      // // await reconnectToActiveGame();
       
       // Falls kein aktives Spiel: Zur Lobby
       if (!document.getElementById('screen-lobby').style.display) {
@@ -208,7 +208,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     updateUserDisplay();
     
     // 🔄 Versuche ins aktives Spiel zurück zu kehren (falls vorhanden)
-    await reconnectToActiveGame();
+    // await reconnectToActiveGame();
     
     // Falls kein aktives Spiel: Zur Lobby
     if (!document.getElementById('screen-lobby').style.display) {

@@ -14,7 +14,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var multiplayerMode = false;
 var myTeam          = null;
 var currentRoom     = null;
-  currentGameId   = null;  // room_code (z.B. "ABC123")
 var currentGameId   = null;  // 🆕 Die echte game_id von Supabase
 var realtimeChannel = null;
 
