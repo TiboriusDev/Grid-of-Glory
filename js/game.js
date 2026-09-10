@@ -161,7 +161,7 @@ async function rollAtkSecure(){
     const diceCount = combat.att.atk;
     const payload = {
       game_id: currentGameId,
-      move_id: combat.moveId || 'temp_' + Date.now(), // Temp ID bis Move gespeichert
+      move_id: null,  // Wird später beim echten Move gespeichert
       roll_type: 'attack',
       dice_count: diceCount
     };
@@ -428,3 +428,5 @@ function clickCell(c,r){
   }
   sel=null; hlM=[]; hlA=[]; combat=null; renderGame();
 }
+
+
