@@ -216,9 +216,6 @@ async function loadUserTeams() {
       ...t,
       unit_ids: JSON.parse(t.unit_ids), // ['unit_1', 'unit_2', ...]
       // Stats NICHT mehr speichern, werden vom Server geholt!
-    return (data || []).map(t => ({
-      ...t,
-      units: JSON.parse(t.units) // JSON string zurück zu Array
     }));
     
   } catch (err) {
