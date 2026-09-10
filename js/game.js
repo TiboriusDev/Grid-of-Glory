@@ -161,7 +161,7 @@ async function rollAtkSecure(){
     const diceCount = combat.att.atk;
     const payload = {
       game_id: currentGameId,
-      move_id: null,  // Wird sp�ter beim echten Move gespeichert
+      move_id: null,  // Wird sp�ter beim echten Move gespeichert
       roll_type: 'attack',
       dice_count: diceCount
     };
@@ -244,7 +244,7 @@ async function rollDefSecure(){
     // 🔒 SERVER WÜRFELT RÜSTUNG!
     const diceResult = await callEdgeFunction('roll-dice', {
       game_id: currentGameId,
-      move_id: combat.moveId || 'temp_' + Date.now(),
+      move_id: combat.moveId || null,
       roll_type: 'defense',
       dice_count: totalDef
     });
@@ -272,7 +272,7 @@ async function rollDefSecure(){
         // Auch Reanimation vom Server würfeln
         const reanimResult = await callEdgeFunction('roll-dice', {
           game_id: currentGameId,
-          move_id: combat.moveId || 'temp_' + Date.now(),
+          move_id: combat.moveId || null,
           roll_type: 'damage',
           dice_count: 1
         });
