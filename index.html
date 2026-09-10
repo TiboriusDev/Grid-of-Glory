@@ -53,7 +53,7 @@
     </div>
 
     <div style="text-align:center;font-size:11px;color:var(--text-muted);">
-      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.0.8)
+      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.0.9)
     </div>
   </div>
 </div>
@@ -98,7 +98,7 @@
     <div id="join-error" style="display:none;"></div>
     
     <div style="text-align:center;margin-top:30px;font-size:11px;color:var(--text-muted);">
-      Version 1.0.8
+      Version 1.0.9
     </div>
   </div>
 </div>
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showLobby();
   });
   
-  document.getElementById('btn-teambuilder-save').addEventListener('click', saveCurrentTeam);
+  document.getElementById('btn-teambuilder-save').addEventListener('click', () => saveCurrentTeam());
   
   document.getElementById('btn-teambuilder-start').addEventListener('click', () => {
     if (applyTeamToGame()) {
