@@ -420,11 +420,10 @@ function renderBottomActionBar(){
   if(!bar) return;
   bar.innerHTML='';
   
-  // Online: nichts anzeigen wenn Gegner dran ist
-  if(multiplayerMode && turn !== myTeam){
-    bar.style.display='none';
-    return;
-  }
+  // Online: deaktiviert wenn Gegner dran ist (nicht verstecken!)
+  const isMyTurn = !multiplayerMode || turn === myTeam;
+  bar.style.opacity = isMyTurn ? '1' : '0.4';
+  bar.style.pointerEvents = isMyTurn ? 'auto' : 'none';
   
   if(phase==='over'){
     const btn=document.createElement('button');
@@ -432,6 +431,8 @@ function renderBottomActionBar(){
     btn.innerHTML='<span style="font-size:16px;">🔄</span><span>Neu starten</span>';
     btn.addEventListener('click',()=>{ showLobby(); });
     bar.appendChild(btn);
+    bar.style.opacity = '1';
+    bar.style.pointerEvents = 'auto';
     return;
   }
   
@@ -439,6 +440,7 @@ function renderBottomActionBar(){
   const moveBtn=document.createElement('button');
   moveBtn.className=`action-icon-btn${phase==='move'?' primary':''}`;
   moveBtn.innerHTML='<span style="font-size:16px;">🚶</span><span>Bewegen</span>';
+  moveBtn.disabled = !isMyTurn;
   moveBtn.addEventListener('click',()=>{
     if(phase!=='over'){ phase='move'; sel=null; hlM=[]; hlA=[]; combat=null; renderGame(); }
   });
@@ -447,6 +449,7 @@ function renderBottomActionBar(){
   const atkBtn=document.createElement('button');
   atkBtn.className=`action-icon-btn${phase==='attack'?' primary':''}`;
   atkBtn.innerHTML='<span style="font-size:16px;">⚔️</span><span>Angreifen</span>';
+  atkBtn.disabled = !isMyTurn;
   atkBtn.addEventListener('click',()=>{
     if(phase!=='over'){ phase='attack'; sel=null; hlM=[]; hlA=[]; combat=null; renderGame(); }
   });
@@ -456,6 +459,7 @@ function renderBottomActionBar(){
   const endBtn=document.createElement('button');
   endBtn.className='action-icon-btn primary';
   endBtn.innerHTML='<span style="font-size:16px;">⏭️</span><span>Zug beenden</span>';
+  endBtn.disabled = !isMyTurn;
   endBtn.addEventListener('click',()=>{ endTurn(); });
   bar.appendChild(endBtn);
 }
