@@ -53,7 +53,7 @@
     </div>
 
     <div style="text-align:center;font-size:11px;color:var(--text-muted);">
-      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.3)
+      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.3.1)
     </div>
   </div>
 </div>
@@ -98,7 +98,7 @@
     <div id="join-error" style="display:none;"></div>
     
     <div style="text-align:center;margin-top:30px;font-size:11px;color:var(--text-muted);">
-      Version 1.3
+      Version 1.3.1
     </div>
   </div>
 </div>
@@ -332,48 +332,42 @@
       <button id="btn-back" class="btn-back-top">← Menü</button>
     </div>
 
-    <!-- MAIN: Board + Sidebar (Desktop: side-by-side, Mobile: stacked) -->
+    <!-- MAIN: Alles untereinander -->
     <div class="game-main">
       
-      <!-- BOARD (Left/Full width on mobile) -->
+      <!-- BOARD -->
       <div class="game-board-container">
         <div class="legend-row" id="game-legend"></div>
         <div id="board-wrap" class="board-wrap"></div>
       </div>
 
-      <!-- SIDEBAR (Right on desktop, hidden on mobile unless no action bar) -->
-      <div class="game-sidebar">
-        <div class="card sidebar-tabs-container">
-          <div class="sidebar-tabs" id="sidebar-tabs">
-            <button class="sidebar-tab active" data-tab="unit">Einheit</button>
-            <button class="sidebar-tab" data-tab="actions">Aktionen</button>
-            <button class="sidebar-tab" data-tab="log">Log</button>
-          </div>
-          
-          <!-- TAB: UNIT -->
-          <div id="tab-unit" class="sidebar-tab-content active">
-            <div id="unit-card">
-              <h3>Keine Einheit</h3>
-              <div style="font-size:11px;color:var(--text-muted);">Einheit anklicken</div>
-            </div>
-          </div>
-          
-          <!-- TAB: ACTIONS -->
-          <div id="tab-actions" class="sidebar-tab-content">
-            <h3 style="margin-bottom:8px;">Aktionen</h3>
-            <div id="actions"></div>
-          </div>
-          
-          <!-- TAB: LOG -->
-          <div id="tab-log" class="sidebar-tab-content">
-            <h3 style="margin-bottom:8px;">Kampflog</h3>
-            <div class="log-box" id="log-box"></div>
+      <!-- INFO SECTIONS (Keine Tabs!) -->
+      <div class="game-info-sections">
+        
+        <!-- UNIT INFO -->
+        <div class="info-card">
+          <h3>Einheit</h3>
+          <div id="unit-card">
+            <div style="font-size:11px;color:var(--text-muted);">Einheit anklicken</div>
           </div>
         </div>
+        
+        <!-- AKTIONEN -->
+        <div class="info-card">
+          <h3>Aktionen</h3>
+          <div id="actions"></div>
+        </div>
+        
+        <!-- LOG -->
+        <div class="info-card">
+          <h3>Kampflog</h3>
+          <div class="log-box" id="log-box"></div>
+        </div>
+        
       </div>
     </div>
     
-    <!-- BOTTOM ACTION BAR (Mobile only) -->
+    <!-- BOTTOM ACTION BAR -->
     <div class="bottom-action-bar" id="bottom-action-bar"></div>
 
   </div>
