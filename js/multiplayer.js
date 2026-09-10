@@ -257,12 +257,14 @@ async function createRoom() {
   }
 
   const code = generateCode();
-  const { data, error } = await sb.from('games').insert({
+  const { data, error } = await sb.from('game_sessions').insert({
     room_code:    code,
-    lobby_status: 'waiting',
+	player_a:     currentUser.id,
+	player_b:     null,
+    status: 'waiting',
     faction_a:    null,
     faction_b:    null,
-    map_config:   null,
+    game_map:   null,
     game_state:   null
   }).select().single();  // 🆕 Hole die eingefügte Reihe mit ID zurück
   
@@ -291,7 +293,7 @@ async function joinRoom(code) {
   }
 
   const { data, error } = await sb
-    .from('games').select('*')
+    .from('game_sessions').select('*')
     .eq('room_code', code.toUpperCase()).single();
 
   if (error || !data) {
@@ -299,7 +301,7 @@ async function joinRoom(code) {
     document.getElementById('join-error').textContent   = '❌ Raum nicht gefunden!';
     return;
   }
-  if (data.lobby_status === 'playing') {
+  if (data.status === 'in_progress') {
     document.getElementById('join-error').style.display = '';
     document.getElementById('join-error').textContent   = '❌ Spiel läuft bereits!';
     return;
@@ -311,9 +313,10 @@ async function joinRoom(code) {
   currentGameId   = data.id;  // 🆕 Speichere die echte game_id
   console.log('✅ Raum beigetreten:', { code: currentRoom, currentGameId });
 
-  await sb.from('games')
-    .update({ lobby_status: 'factions' })
-    .eq('room_code', currentRoom);
+// Update player_b in database
+await sb.from('game_sessions')
+  .update({ player_b: currentUser.id })
+  .eq('room_code', currentRoom);
 
   subscribeToRoom(currentRoom);
   showFactionScreen();
@@ -327,9 +330,9 @@ async function startRematch() {
   }
   
   // Supabase aktualisieren: Zurück zum 'map' Status, game_state/deployment_state leeren
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({
-      lobby_status: 'map',
+      status: 'map',
       game_state: null,
       deployment_state: null
     })
@@ -380,18 +383,18 @@ function subscribeToRoom(code) {
 }
 
 function handleRoomUpdate(row) {
-  console.log('Update:', row.lobby_status, 'team:', myTeam);
+  console.log('Update:', row.status, 'team:', myTeam);
 
   // ── Lobby-Phase: Völker wählen ──
-  if (row.lobby_status === 'factions') {
+  if (row.status === 'factions') {
     // Spieler A geht zur Völkerwahl wenn B beigetreten ist
     if (myTeam === 'a') showFactionScreen();
     // Fortschritt aktualisieren
     updateFactionProgress(row);
     // Wenn beide gewählt haben → A setzt Status auf 'map'
     if (row.faction_a && row.faction_b && myTeam === 'a') {
-      sb.from('games')
-        .update({ lobby_status: 'map' })
+      sb.from('game_sessions')
+        .update({ status: 'map' })
         .eq('room_code', currentRoom)
         .then(({ error }) => {
           if (error) console.error('map setzen fehlgeschlagen:', error.message);
@@ -401,7 +404,7 @@ function handleRoomUpdate(row) {
   }
 
   // ── Lobby-Phase: Karte wählen ──
-  if (row.lobby_status === 'map') {
+  if (row.status === 'map') {
     pickedFactions.a = row.faction_a;
     pickedFactions.b = row.faction_b;
     if (myTeam === 'a') {
@@ -413,13 +416,13 @@ function handleRoomUpdate(row) {
   }
 
   // ── Aufstellungsphase ──
-  if (row.lobby_status === 'deployment') {
+  if (row.status === 'deployment') {
     pickedFactions.a = row.faction_a;
     pickedFactions.b = row.faction_b;
     
     if (units.length === 0) {
       // Ersten Map laden
-      const mapDef = row.map_config;
+      const mapDef = row.game_map;
       loadGame(mapDef);
     }
     
@@ -454,7 +457,7 @@ function handleRoomUpdate(row) {
   }
 
   // ── Spiel läuft ──
-  if (row.lobby_status === 'playing') {
+  if (row.status === 'in_progress') {
     pickedFactions.a = row.faction_a;
     pickedFactions.b = row.faction_b;
 
@@ -545,7 +548,7 @@ async function confirmFactionOnline() {
   btn.textContent = '⏳ Warte auf Gegner…';
 
   const col = myTeam === 'a' ? 'faction_a' : 'faction_b';
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({ [col]: factionKey })
     .eq('room_code', currentRoom);
 
@@ -562,10 +565,10 @@ async function startOnlineGame(mapDef) {
   deploymentMode = true;
   deploymentConfirmed = { a: false, b: false };
 
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({
-      lobby_status: 'deployment',
-      map_config:   mapDef,
+      status: 'deployment',
+      game_map:   mapDef,
       deployment_state: buildDeploymentState()
     })
     .eq('room_code', currentRoom);
@@ -581,9 +584,9 @@ async function startOnlineGame(mapDef) {
 async function startGameAfterDeployment() {
   const state = buildFullState();
 
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({
-      lobby_status: 'playing',
+      status: 'playing',
       game_state:   state,
       deployment_state: null
     })
@@ -667,7 +670,7 @@ function buildMoveState() {
 // Zug senden
 async function sendMove() {
   if (!multiplayerMode || !currentRoom) return;
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({ game_state: buildMoveState() })
     .eq('room_code', currentRoom);
   if (error) console.error('sendMove fehlgeschlagen:', error.message);
@@ -782,7 +785,7 @@ async function confirmDeployment() {
   
   deploymentConfirmed[myTeam] = true;
   
-  const { error } = await sb.from('games')
+  const { error } = await sb.from('game_sessions')
     .update({ deployment_state: buildDeploymentState() })
     .eq('room_code', currentRoom);
   
@@ -847,7 +850,7 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 
 // Warten abbrechen
 document.getElementById('btn-cancel-wait').addEventListener('click', async () => {
-  if (currentRoom) await sb.from('games').delete().eq('room_code', currentRoom);
+  if (currentRoom) await sb.from('game_sessions').delete().eq('room_code', currentRoom);
   if (realtimeChannel) realtimeChannel.unsubscribe();
   multiplayerMode = false;
   myTeam          = null;
@@ -915,3 +918,5 @@ document.getElementById('btn-back-deployment')?.addEventListener('click', () => 
   deploymentMode  = false;
   showLobby();
 });
+
+
