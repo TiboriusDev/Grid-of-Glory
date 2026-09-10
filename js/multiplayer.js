@@ -16,6 +16,82 @@ var myTeam          = null;
 var currentRoom     = null;
 var realtimeChannel = null;
 
+// ═══════════════════════════════════════════════════════════════
+// 🔒 EDGE FUNCTION HELPER — Sichere Server-Validierung
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Ruft eine Supabase Edge Function mit Auth Token auf
+ * 
+ * VERWENDUNGSBEISPIELE:
+ * 
+ * 1️⃣ WÜRFELWURF (Server würfelt!):
+ *    const diceResult = await callEdgeFunction('roll-dice', {
+ *      game_id: 'game-123',
+ *      move_id: 'move-456',
+ *      roll_type: 'attack',  // 'attack' | 'defense' | 'damage'
+ *      dice_count: 3
+ *    });
+ *    // Returns: { success: true, rolls: [4, 5, 2], total: 11, ... }
+ * 
+ * 2️⃣ TEAM-VALIDIERUNG:
+ *    const teamResult = await callEdgeFunction('validate-team', {
+ *      faction: 'humans',
+ *      unit_ids: ['warrior_1', 'archer_1']
+ *    });
+ *    // Returns: { success: true, units: [{...}, {...}], ... }
+ * 
+ * 3️⃣ SPIELZUG-VALIDIERUNG:
+ *    const moveResult = await callEdgeFunction('validate-move', {
+ *      game_id: 'game-123',
+ *      move_type: 'move_unit',
+ *      unit_id: 'unit_1',
+ *      from_pos: {col: 5, row: 5},
+ *      to_pos: {col: 6, row: 5}
+ *    });
+ *    // Returns: { success: true, move_id: '...', ... }
+ * 
+ * @param {string} functionName - Name der Function (z.B. 'roll-dice')
+ * @param {object} payload - Daten für die Function
+ * @returns {object} Antwort vom Server
+ */
+async function callEdgeFunction(functionName, payload) {
+  if (!currentUser) {
+    throw new Error("User not authenticated");
+  }
+
+  // Hole Auth Token vom Supabase Client
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    throw new Error("No session — bitte melden Sie sich an");
+  }
+
+  const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || `Edge Function Fehler: ${response.status}`);
+    }
+
+    return result;
+
+  } catch (error) {
+    console.error(`Edge Function ${functionName} Fehler:`, error);
+    throw error;
+  }
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // SCREEN-VERWALTUNG

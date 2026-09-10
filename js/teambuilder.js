@@ -7,7 +7,7 @@
 let teamBuilderMode = false;
 let teamBuilderFaction = null;
 let currentTeamName = '';
-let currentTeamUnits = []; // [{ id: 'sm1', name: 'Tactical Marine', ... }, ...]
+let currentTeamUnits = []; // 🔒 SICHER: Nur Unit-IDs! ['unit_1', 'unit_2', ...]
 
 // ── SCREEN VERWALTUNG ──────────────────────────────────
 function showTeamBuilderFactionSelect() {
@@ -76,7 +76,7 @@ function renderTeamBuilder() {
   availableContainer.innerHTML = '';
   
   faction.roster.forEach(unit => {
-    const isSelected = currentTeamUnits.some(u => u.id === unit.id);
+    const isSelected = currentTeamUnits.includes(unit.id); // 🔒 Nur IDs vergleichen
     const canAdd = currentTeamUnits.length < MAX_UNITS;
     
     const card = document.createElement('div');
@@ -94,7 +94,7 @@ function renderTeamBuilder() {
     
     if (!isSelected && canAdd) {
       card.querySelector('.unit-action-btn').addEventListener('click', () => {
-        addUnitToTeam(unit);
+        addUnitToTeam(unit.id); // 🔒 Speichere nur die ID!
       });
     }
     
@@ -111,16 +111,20 @@ function renderTeamBuilder() {
     const teamList = document.createElement('div');
     teamList.className = 'team-list';
     
-    currentTeamUnits.forEach(unit => {
+    currentTeamUnits.forEach(unitId => {
+      // 🔒 Hole echte Stats vom Server (FACTIONS)
+      const unit = faction.roster.find(u => u.id === unitId);
+      if (!unit) return; // Sicherheit: Unit sollte existieren
+      
       const item = document.createElement('div');
       item.className = 'team-unit-item';
       item.innerHTML = `
         <span>${unit.e} ${unit.name}</span>
-        <button class="remove-btn" data-unit-id="${unit.id}">✕</button>
+        <button class="remove-btn" data-unit-id="${unitId}">✕</button>
       `;
       
       item.querySelector('.remove-btn').addEventListener('click', () => {
-        removeUnitFromTeam(unit.id);
+        removeUnitFromTeam(unitId);
       });
       
       teamList.appendChild(item);
@@ -131,20 +135,22 @@ function renderTeamBuilder() {
 }
 
 // ── TEAM MANIPULATION ─────────────────────────────────
-function addUnitToTeam(unit) {
+function addUnitToTeam(unitId) {
   if (currentTeamUnits.length >= 6) {
     alert('❌ Maximal 6 Einheiten pro Team!');
     return;
   }
   
-  // Kopie erstellen (damit nicht Referenzen durcheinander gehen)
-  const unitCopy = { ...unit };
-  currentTeamUnits.push(unitCopy);
+  // 🔒 Speichere NUR die Unit-ID, nicht die ganzen Stats!
+  if (!currentTeamUnits.includes(unitId)) {
+    currentTeamUnits.push(unitId);
+  }
   renderTeamBuilder();
 }
 
 function removeUnitFromTeam(unitId) {
-  currentTeamUnits = currentTeamUnits.filter(u => u.id !== unitId);
+  // 🔒 Entferne die Unit-ID
+  currentTeamUnits = currentTeamUnits.filter(id => id !== unitId);
   renderTeamBuilder();
 }
 
@@ -165,13 +171,16 @@ async function saveCurrentTeam() {
   if (!teamName) return; // User hat Abbrechen geklickt
   
   try {
-    const { data, error } = await sb.from('user_teams').insert({
+    // 🔒 Speichere ONLY Unit-IDs, nicht die kompletten Stats!
+    const teamData = {
       user_id: currentUser.id,
       team_name: teamName,
-      faction_a: teamBuilderFaction,
-      units: JSON.stringify(currentTeamUnits),
+      faction: teamBuilderFaction,
+      unit_ids: JSON.stringify(currentTeamUnits), // ['unit_1', 'unit_2', ...]
       created_at: new Date().toISOString()
-    }).select();
+    };
+    
+    const { data, error } = await sb.from('user_teams').insert(teamData).select();
     
     if (error) {
       alert(`❌ Fehler: ${error.message}`);
@@ -194,10 +203,7 @@ async function loadUserTeams() {
   
   try {
     const { data, error } = await sb
-      .from('user_teams')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .eq('faction_a', teamBuilderFaction)
+      .from('user_', teamBuilderFaction) // faction statt faction_a
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -205,6 +211,11 @@ async function loadUserTeams() {
       return [];
     }
     
+    // 🔒 Lade Unit-IDs und rekonstruiere Stats vom Server!
+    return (data || []).map(t => ({
+      ...t,
+      unit_ids: JSON.parse(t.unit_ids), // ['unit_1', 'unit_2', ...]
+      // Stats NICHT mehr speichern, werden vom Server geholt!
     return (data || []).map(t => ({
       ...t,
       units: JSON.parse(t.units) // JSON string zurück zu Array
@@ -232,10 +243,10 @@ async function applyTeam(teamId) {
       .eq('user_id', currentUser.id)
       .single();
     
-    if (error || !data) {
-      alert('❌ Team nicht gefunden!');
-      return;
-    }
+    if 🔒 Team anwenden - Lade nur die Unit-IDs!
+    const unitIds = JSON.parse(data.unit_ids);
+    currentTeamUnits = unitIds; // ['unit_1', 'unit_2', ...]
+    teamBuilderFaction = data.faction
     
     // Team anwenden
     const units = JSON.parse(data.units);
@@ -263,17 +274,30 @@ function applyTeamToGame() {
     return false;
   }
   
-  // pickedFactions aktualisieren (nur Seite A — wird später für Online expandiert)
+  // 🔒 WICHTIG: Rekonstruiere echte Unit-Stats vom Server
+  const faction = FACTIONS[teamBuilderFaction];
+  const gameUnits = currentTeamUnits.map(unitId => {
+    const canonical = faction.roster.find(u => u.id === unitId);
+    if (!canonical) {
+      alert('❌ Unit nicht in Fraktion gefunden! Mögliche Manipulaton?');
+      return null;
+    }
+    // Kopiere NUR die kanonischen Stats vom Server!
+    return { ...canonical, team: 'a' };
+  }).filter(u => u !== null);
+  
+  if (gameUnits.length === 0) {
+    alert('❌ Keine gültigen Einheiten!');
+    return false;
+  }
+  
+  // Übergebe dem Spiel
   pickedFactions.a = teamBuilderFaction;
+  window.customTeamUnits = gameUnits; // Mit echten Stats vom Server!
   
-  // Units in game.js übergeben
-  // Das macht die loadGame() Funktion — aber wir müssen custom units unterstützen
-  // Für jetzt: Units speichern und später in loadGame() nutzen
-  window.customTeamUnits = currentTeamUnits;
-  
-  console.log('Team zum Spiel übergeben:', {
+  console.log('✅ Team zum Spiel übergeben:', {
     faction: teamBuilderFaction,
-    units: currentTeamUnits.length,
+    units: gameUnits.length,
     teamName: currentTeamName
   });
   

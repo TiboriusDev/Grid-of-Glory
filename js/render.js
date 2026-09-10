@@ -24,8 +24,8 @@ function renderDeploymentBoard(){
   wrap.innerHTML='';
   const grid=document.createElement('div');
   grid.className='board-grid';
-  grid.style.gridTemplateColumns=`repeat(${COLS},40px)`;
-  grid.style.gridTemplateRows=`repeat(${ROWS},40px)`;
+  grid.style.gridTemplateColumns=`repeat(${COLS},${SPRITE_CONFIG.terrain.width}px)`;
+  grid.style.gridTemplateRows=`repeat(${ROWS},${SPRITE_CONFIG.terrain.height}px)`;
   
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
@@ -43,8 +43,19 @@ function renderDeploymentBoard(){
       else if(inZoneB) cls+=' deployment-zone-b';
       
       cell.className=cls;
-      if(ter===1) cell.textContent='🧱';
-      else if(ter===3) cell.textContent='🌊';
+      
+      // Basis-Gelände-Sprite hinzufügen (Gras, Wasser, Dirt)
+      const baseSprite = createSpriteElement('terrain-base', ter.toString());
+      baseSprite.className = 'sprite-terrain-base';
+      cell.appendChild(baseSprite);
+      
+      // Gelände-Objekt-Sprite hinzufügen (Wand, Deckung, Baum)
+      const objId = gO(c,r);
+      if(objId > 0){
+        const objSprite = createSpriteElement('terrain-object', objId.toString());
+        objSprite.className = 'sprite-terrain-object';
+        cell.appendChild(objSprite);
+      }
       
       const u=uAt(c,r);
       if(u){
@@ -52,8 +63,11 @@ function renderDeploymentBoard(){
         ud.className='unit';
         ud.style.background=u.facBg;
         ud.style.borderColor=u.facColor;
-        ud.textContent=u.e;
         ud.title=`${u.name}`;
+        
+        // Sprite-Element für Einheit
+        const unitSprite = createSpriteElement('unit', u.spriteKey || 'warrior');
+        ud.appendChild(unitSprite);
         
         // Nur eigene Einheiten draggbar
         if(u.team === myTeam && !deploymentConfirmed[myTeam]){
@@ -149,8 +163,8 @@ function renderBoard(){
   wrap.innerHTML='';
   const grid=document.createElement('div');
   grid.className='board-grid';
-  grid.style.gridTemplateColumns=`repeat(${COLS},40px)`;
-  grid.style.gridTemplateRows=`repeat(${ROWS},40px)`;
+  grid.style.gridTemplateColumns=`repeat(${COLS},${SPRITE_CONFIG.terrain.width}px)`;
+  grid.style.gridTemplateRows=`repeat(${ROWS},${SPRITE_CONFIG.terrain.height}px)`;
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const cell=document.createElement('div');
@@ -162,8 +176,20 @@ function renderBoard(){
       if(hlM.some(([hc,hr])=>hc===c&&hr===r)) cls+=' hl-move';
       if(hlA.some(([hc,hr])=>hc===c&&hr===r)) cls+=' hl-atk';
       cell.className=cls;
-      if(ter===1) cell.textContent='🧱';
-      else if(ter===3) cell.textContent='🌊';
+      
+      // Basis-Gelände-Sprite hinzufügen (Gras, Wasser, Dirt)
+      const baseSprite = createSpriteElement('terrain-base', ter.toString());
+      baseSprite.className = 'sprite-terrain-base';
+      cell.appendChild(baseSprite);
+      
+      // Gelände-Objekt-Sprite hinzufügen (Wand, Deckung, Baum)
+      const objId = gO(c,r);
+      if(objId > 0){
+        const objSprite = createSpriteElement('terrain-object', objId.toString());
+        objSprite.className = 'sprite-terrain-object';
+        cell.appendChild(objSprite);
+      }
+      
       const u=uAt(c,r);
       if(u){
         if(sel&&sel.id===u.id) cell.classList.add('hl-sel');
@@ -171,8 +197,12 @@ function renderBoard(){
         ud.className=`unit${(u.moved&&u.attacked)?' spent':''}`;
         ud.style.background=u.facBg;
         ud.style.borderColor=u.facColor;
-        ud.textContent=u.e;
         ud.title=`${u.name} HP:${u.hp}/${u.maxHp}`;
+        
+        // Sprite-Element für Einheit
+        const unitSprite = createSpriteElement('unit', u.spriteKey || 'warrior');
+        ud.appendChild(unitSprite);
+        
         const hb=document.createElement('div'); hb.className='hp-bar';
         const hf=document.createElement('div'); hf.className='hp-fill';
         hf.style.width=Math.max(0,u.hp/u.maxHp*100)+'%';
@@ -263,7 +293,17 @@ function renderSidebar(){
       if(isAttacker){
         const b=document.createElement('button'); b.className='act-btn roll-a';
         b.textContent=`🎲 ${att.atk}W6 Angriff würfeln (Treffer: ${hitThresh}+)`;
-        b.addEventListener('click',rollAtk); dp.appendChild(b);
+        // 🔒 Nutze intelligente Wrapper, die Multiplayer/Offline erkennen
+        b.addEventListener('click', async () => { 
+          b.disabled = true;
+          try {
+            await rollAtkHandler();
+          } catch (error) {
+            console.error('Würfel-Fehler:', error);
+          }
+          b.disabled = false;
+        });
+        dp.appendChild(b);
       } else {
         const lbl=document.createElement('div');
         lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
@@ -289,7 +329,17 @@ function renderSidebar(){
       if(isDefender){
         const b=document.createElement('button'); b.className='act-btn roll-d';
         b.textContent=`🛡️ ${totalDef}W6 Rüstung würfeln (Rettung: 5+)`;
-        b.addEventListener('click',rollDef); dp.appendChild(b);
+        // 🔒 Nutze intelligente Wrapper, die Multiplayer/Offline erkennen
+        b.addEventListener('click', async () => { 
+          b.disabled = true;
+          try {
+            await rollDefHandler();
+          } catch (error) {
+            console.error('Würfel-Fehler:', error);
+          }
+          b.disabled = false;
+        });
+        dp.appendChild(b);
       } else {
         const lbl=document.createElement('div');
         lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';

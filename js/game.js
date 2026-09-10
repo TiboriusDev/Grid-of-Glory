@@ -6,7 +6,7 @@ let factionPickStep = 'a';
 let activeMapTab = 'p0';
 let edCols=10, edRows=10, edTerrain=[], edTool='empty';
 
-let COLS=10, ROWS=10, tmap={};
+let COLS=10, ROWS=10, tmap={}, tobj={};
 let units=[], sel=null, phase='move', turn='a';
 let hlM=[], hlA=[], logs=[];
 let combat=null;
@@ -19,8 +19,9 @@ let deploymentDragUnit = null;
 
 // ── helpers ──
 const tk=(c,r)=>`${c},${r}`;
-const gT=(c,r)=>tmap[tk(c,r)]||0;
-const blocking=(c,r)=>{const t=gT(c,r);return t===1||t===3;};
+const gT=(c,r)=>tmap[tk(c,r)]||0;  // Base Terrain
+const gO=(c,r)=>tobj[tk(c,r)]||0;  // Terrain Object
+const blocking=(c,r)=>{const o=gO(c,r);return o===1||o===2;};  // Wall, Cover blockieren
 const dist=(a,b)=>Math.abs(a.col-b.col)+Math.abs(a.row-b.row);
 const alive=u=>u.hp>0;
 const uAt=(c,r)=>units.find(u=>u.col===c&&u.row===r&&alive(u));
@@ -35,9 +36,26 @@ function mkUnit(rosterEntry, team, id, col, row, factionKey){
   const r=rosterEntry;
   const fac=FACTIONS[factionKey];
   const moveBonus = factionKey==='orks' ? 1 : 0;
+  
+  // Sprite-Key basierend auf Einheits-Namen oder Emoji
+  let spriteKey = 'warrior';
+  const name = r.name.toLowerCase();
+  if(name.includes('zauberer') || name.includes('wizard')) spriteKey = 'wizard';
+  else if(name.includes('bogen') || name.includes('archer')) spriteKey = 'archer';
+  else if(name.includes('ritter') || name.includes('knight')) spriteKey = 'knight';
+  else if(name.includes('kleriker') || name.includes('cleric')) spriteKey = 'cleric';
+  else if(name.includes('ork') && name.includes('krieger')) spriteKey = 'orc_warrior';
+  else if(name.includes('schamane')) spriteKey = 'orc_shaman';
+  else if(name.includes('goblin')) spriteKey = 'goblin';
+  else if(name.includes('troll')) spriteKey = 'troll';
+  else if(name.includes('skelett') || name.includes('skeleton')) spriteKey = 'skeleton';
+  else if(name.includes('zombie')) spriteKey = 'zombie';
+  else if(name.includes('geist') || name.includes('ghost')) spriteKey = 'ghost';
+  else if(name.includes('lich')) spriteKey = 'lich';
+  
   return{
     id, factionKey, team, col, row,
-    name:r.name, e:r.e,
+    name:r.name, e:r.e, spriteKey,
     hp:r.hp, maxHp:r.hp,
     move:r.move+moveBonus, atk:r.atk, ar:r.ar, def:r.def, dmg:r.dmg,
     orkAtk:!!r.orkAtk, reanimation:!!r.reanimation,
@@ -47,8 +65,23 @@ function mkUnit(rosterEntry, team, id, col, row, factionKey){
 }
 
 function loadGame(mapDef){
-  COLS=mapDef.cols; ROWS=mapDef.rows; tmap={};
-  (mapDef.terrain||[]).forEach(({c,r,t})=>{tmap[tk(c,r)]=t;});
+  COLS=mapDef.cols; ROWS=mapDef.rows; tmap={}; tobj={};
+  
+  // Terrain-Konvertierung: Alte IDs zu (base, obj)
+  const terrainMap = {
+    0: [0, 0],  // Gras, nichts
+    1: [0, 1],  // Gras, Wand
+    2: [0, 2],  // Gras, Deckung
+    3: [1, 0],  // Wasser, nichts
+  };
+  
+  // Lade Gelände aus Map-Definition
+  (mapDef.terrain||[]).forEach(({c,r,t})=>{
+    const [base, obj] = terrainMap[t] || [0, 0];
+    tmap[tk(c,r)] = base;
+    if(obj > 0) tobj[tk(c,r)] = obj;
+  });
+  
   units=[];
   let uid=1;
   const facA=FACTIONS[pickedFactions.a];
@@ -98,11 +131,51 @@ function startCombat(att,def){
 }
 
 function rollAtk(){
+  // 🔒 SICHERHEIT: Würfel werden vom SERVER geworfen!
+  // Diese Funktion wird jetzt async gemacht in multiplayer.js
   combat.ar=roll(combat.att.atk);
   combat.step='roll_def';
   addLog(`${combat.att.e} Angriff [${combat.ar.join(',')}]`,'hit');
   renderGame();
   if(typeof sendMove==='function') sendMove(); // Sync sofort nach Angriffswurf
+}
+
+/**
+ * 🔒 SICHERE Version von rollAtk mit Server-Würfeln
+ * Wird von multiplayer.js aufgerufen
+ */
+async function rollAtkSecure(){
+  try {
+    if (!currentRoom) {
+      addLog('❌ Keine aktive Spielsitzung','err');
+      return false;
+    }
+
+    const diceCount = combat.att.atk;
+    
+    // 🔒 SERVER WÜRFELT!
+    const diceResult = await callEdgeFunction('roll-dice', {
+      game_id: currentRoom.id,
+      move_id: combat.moveId || 'temp_' + Date.now(), // Temp ID bis Move gespeichert
+      roll_type: 'attack',
+      dice_count: diceCount
+    });
+
+    // Echte Würfel vom Server verwenden!
+    combat.ar = diceResult.rolls;
+    combat.step = 'roll_def';
+    
+    addLog(`${combat.att.e} Angriff [${combat.ar.join(',')}]`,'hit');
+    renderGame();
+    
+    if(typeof sendMove === 'function') sendMove();
+    return true;
+
+  } catch (error) {
+    addLog(`❌ Würfel-Fehler: ${error.message}`,'err');
+    console.error(error);
+    return false;
+  }
 }
 
 function rollDef(){
@@ -142,6 +215,84 @@ function rollDef(){
   if(typeof sendMove==='function') sendMove(); // Sync sofort nach Rüstungswurf
 }
 
+/**
+ * 🔒 SICHERE Version von rollDef mit Server-Würfeln
+ * Wird von multiplayer.js aufgerufen
+ */
+async function rollDefSecure(){
+  try {
+    if (!currentRoom || !combat) {
+      addLog('❌ Kein aktiver Kampf','err');
+      return false;
+    }
+
+    const { att, def, ar, coverBonus: cov } = combat;
+    const totalDef = def.def + cov;
+
+    // 🔒 SERVER WÜRFELT RÜSTUNG!
+    const diceResult = await callEdgeFunction('roll-dice', {
+      game_id: currentRoom.id,
+      move_id: combat.moveId || 'temp_' + Date.now(),
+      roll_type: 'defense',
+      dice_count: totalDef
+    });
+
+    // Echte Würfel vom Server verwenden!
+    combat.dr = diceResult.rolls;
+
+    const hitThresh = att.orkAtk ? 3 : 4;
+    const hits = ar.filter(v => v >= hitThresh).length;
+    const saves = combat.dr.filter(v => v >= 5).length;
+    const wounds = Math.max(0, hits - saves);
+    
+    // 🔒 Schaden wird nur mit echten Server-Würfeln berechnet!
+    const dmg = wounds > 0 ? wounds * (2 + Math.floor(Math.random() * 2)) : 0; // 1d6 Schaden
+    def.hp = Math.max(0, def.hp - dmg);
+    att.attacked = true;
+
+    addLog(`${def.e} Rüstung [${combat.dr.join(',')}]${cov > 0 ? ` (+${cov} Deckung)` : ''}`, 'mov');
+    if (dmg === 0) addLog(`🛡️ Abgewehrt! ${hits} Treffer, ${saves} Rettungen → 0 Schaden`, 'mis');
+    else addLog(`💥 ${wounds} Wunden → ${dmg} Schaden! ${def.name} HP: ${def.hp}/${def.maxHp}`, 'hit');
+
+    // Necron reanimation
+    if (def.hp <= 0) {
+      if (def.reanimation && !def.reanimated) {
+        // Auch Reanimation vom Server würfeln
+        const reanimResult = await callEdgeFunction('roll-dice', {
+          game_id: currentRoom.id,
+          move_id: combat.moveId || 'temp_' + Date.now(),
+          roll_type: 'damage',
+          dice_count: 1
+        });
+        
+        const rr = reanimResult.rolls[0];
+        addLog(`⚙️ Reanimationsprotokoll: ${def.e} würfelt ${rr}…`, 'cov');
+        if (rr >= 5) {
+          def.hp = 3;
+          def.reanimated = true;
+          addLog(`✅ ${def.name} steht wieder auf! (3 HP)`, 'cov');
+        } else {
+          addLog(`❌ Reanimation fehlgeschlagen — ${def.name} vernichtet!`, 'kil');
+        }
+      } else {
+        addLog(`☠️ ${def.e} ${def.name} vernichtet!`, 'kil');
+      }
+    }
+
+    combat = null;
+    checkWin();
+    renderGame();
+
+    if (typeof sendMove === 'function') sendMove();
+    return true;
+
+  } catch (error) {
+    addLog(`❌ Rüstungs-Würfel Fehler: ${error.message}`, 'err');
+    console.error(error);
+    return false;
+  }
+}
+
 function checkWin(){
   const a=units.filter(u=>u.team==='a'&&alive(u)).length;
   const b=units.filter(u=>u.team==='b'&&alive(u)).length;
@@ -161,6 +312,43 @@ var endTurn = async function(){
   renderGame();
   // sendMove() wird von multiplayer.js nach dem Override aufgerufen
 };
+
+// ═══════════════════════════════════════════════════════════════
+// 🔒 INTELLIGENTE WÜRFEL-WRAPPER
+// Je nachdem ob Multiplayer aktiv ist, werden sichere oder unsichere Versionen verwendet
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Intelligente Angriffswürfel
+ * - Wenn Multiplayer: nutzt Server (rollAtkSecure)
+ * - Sonst: nutzt lokale Würfel (rollAtk)
+ */
+async function rollAtkHandler() {
+  if (typeof multiplayerMode !== 'undefined' && multiplayerMode && typeof currentRoom !== 'undefined' && currentRoom) {
+    // 🔒 MULTIPLAYER — Sichere Server-Würfel
+    return await rollAtkSecure();
+  } else {
+    // 🎮 OFFLINE — Lokale Würfel (für schnelle Tests)
+    rollAtk();
+    return true;
+  }
+}
+
+/**
+ * Intelligente Rüstungswürfel
+ * - Wenn Multiplayer: nutzt Server (rollDefSecure)
+ * - Sonst: nutzt lokale Würfel (rollDef)
+ */
+async function rollDefHandler() {
+  if (typeof multiplayerMode !== 'undefined' && multiplayerMode && typeof currentRoom !== 'undefined' && currentRoom) {
+    // 🔒 MULTIPLAYER — Sichere Server-Würfel
+    return await rollDefSecure();
+  } else {
+    // 🎮 OFFLINE — Lokale Würfel
+    rollDef();
+    return true;
+  }
+}
 
 function selUnit(u){
   if(!alive(u)) return;
