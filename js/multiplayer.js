@@ -13,7 +13,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // var damit kein Redeclaration-Fehler mit anderen Scripts
 var multiplayerMode = false;
 var myTeam          = null;
-var currentRoom     = null;  // room_code (z.B. "ABC123")
+var currentRoom     = null;
+  currentGameId   = null;  // room_code (z.B. "ABC123")
 var currentGameId   = null;  // 🆕 Die echte game_id von Supabase
 var realtimeChannel = null;
 
@@ -90,6 +91,44 @@ async function callEdgeFunction(functionName, payload) {
   } catch (error) {
     console.error(`Edge Function ${functionName} Fehler:`, error);
     throw error;
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// 🔄 RECONNECT — Nach Seiten-Reload ins Spiel zurück
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Überprüfe ob der User noch ein aktives Spiel hat
+ * Wird aufgerufen nach dem Login
+ */
+async function reconnectToActiveGame() {
+  if (!currentUser) return;
+  
+  try {
+    const { data: games } = await sb
+      .from('games')
+      .select('*')
+      .or(`player_a.eq.${currentUser.id},player_b.eq.${currentUser.id}`)
+      .in('lobby_status', ['faction', 'teambuilder', 'map', 'deployment', 'game', 'over']);
+    
+    if (!games || games.length === 0) return;
+    
+    const game = games[0];
+    multiplayerMode = true;
+    currentRoom = game.room_code;
+    currentGameId = game.id;
+    myTeam = game.player_a === currentUser.id ? 'a' : 'b';
+    
+    console.log('🔄 Reconnect: Ins Spiel ' + currentRoom + ' zurück!');
+    subscribeToRoom(currentRoom);
+    
+    if (game.lobby_status === 'game') showGame();
+    else if (game.lobby_status === 'deployment') showDeployment();
+    else showFactionScreen();
+  } catch (err) { 
+    console.error('Reconnect Error:', err); 
   }
 }
 
@@ -751,6 +790,7 @@ document.getElementById('btn-local').addEventListener('click', () => {
   multiplayerMode = false;
   myTeam          = null;
   currentRoom     = null;
+  currentGameId   = null;
   showFactionScreen();
 });
 
@@ -802,6 +842,7 @@ document.getElementById('btn-cancel-wait').addEventListener('click', async () =>
   multiplayerMode = false;
   myTeam          = null;
   currentRoom     = null;
+  currentGameId   = null;
   showLobby();
 });
 
@@ -814,6 +855,7 @@ document.getElementById('btn-cancel-wait-map').addEventListener('click', () => {
   multiplayerMode = false;
   myTeam          = null;
   currentRoom     = null;
+  currentGameId   = null;
   showLobby();
 });
 
@@ -823,6 +865,7 @@ document.getElementById('btn-back').addEventListener('click', () => {
   multiplayerMode = false;
   myTeam          = null;
   currentRoom     = null;
+  currentGameId   = null;
   showLobby();
 });
 
@@ -858,6 +901,7 @@ document.getElementById('btn-back-deployment')?.addEventListener('click', () => 
   multiplayerMode = false;
   myTeam          = null;
   currentRoom     = null;
+  currentGameId   = null;
   deploymentMode  = false;
   showLobby();
 });

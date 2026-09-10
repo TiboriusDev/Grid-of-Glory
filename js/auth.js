@@ -164,7 +164,14 @@ async function checkAuthStatus() {
       currentUser = session.user;
       hideAuthScreen();
       updateUserDisplay();
-      showLobby();
+      
+      // 🔄 Versuche ins aktives Spiel zurück zu kehren (falls vorhanden)
+      await reconnectToActiveGame();
+      
+      // Falls kein aktives Spiel: Zur Lobby
+      if (!document.getElementById('screen-lobby').style.display) {
+        showLobby();
+      }
       console.log('✅ Angemeldet als:', currentUser.email || currentUser.user_metadata?.name);
     } else {
       currentUser = null;
@@ -199,6 +206,11 @@ sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = session.user;
     hideAuthScreen();
     updateUserDisplay();
+    
+    // 🔄 Versuche ins aktives Spiel zurück zu kehren (falls vorhanden)
+    await reconnectToActiveGame();
+    
+    // Falls kein aktives Spiel: Zur Lobby
     if (!document.getElementById('screen-lobby').style.display) {
       showLobby();
     }
