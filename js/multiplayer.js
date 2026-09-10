@@ -263,9 +263,7 @@ async function createRoom() {
 	player_b:     null,
     status: 'waiting',
     faction_a:    null,
-    faction_b:    null,
-    game_map:   null,
-    game_state:   null
+    faction_b:    null
   }).select().single();  // 🆕 Hole die eingefügte Reihe mit ID zurück
   
   if (error) {
@@ -292,15 +290,24 @@ async function joinRoom(code) {
     return;
   }
 
-  const { data, error } = await sb
-    .from('game_sessions').select('*')
-    .eq('room_code', code.toUpperCase()).single();
+const { data, error } = await sb
+  .from('game_sessions')
+  .select('*')
+  .eq('room_code', code.toUpperCase())
+  .limit(1);  // 🆕 Statt .single() - gibt Array mit 0-1 Elementen
 
-  if (error || !data) {
-    document.getElementById('join-error').style.display = '';
-    document.getElementById('join-error').textContent   = '❌ Raum nicht gefunden!';
-    return;
-  }
+if (error) {
+  console.error('Fehler:', error);
+  return;
+}
+
+if (!data || data.length === 0) {
+  // Raum nicht gefunden
+  document.getElementById('join-error').textContent = '❌ Raum nicht gefunden!';
+  return;
+}
+
+const game = data[0];  // 🆕 Erstes Element nehmen
   if (data.status === 'in_progress') {
     document.getElementById('join-error').style.display = '';
     document.getElementById('join-error').textContent   = '❌ Spiel läuft bereits!';
@@ -918,5 +925,6 @@ document.getElementById('btn-back-deployment')?.addEventListener('click', () => 
   deploymentMode  = false;
   showLobby();
 });
+
 
 
