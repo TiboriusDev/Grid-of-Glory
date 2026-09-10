@@ -290,24 +290,15 @@ async function joinRoom(code) {
     return;
   }
 
-const { data, error } = await sb
-  .from('game_sessions')
-  .select('*')
-  .eq('room_code', code.toUpperCase())
-  .limit(1);  // 🆕 Statt .single() - gibt Array mit 0-1 Elementen
+  const { data, error } = await sb
+    .from('game_sessions').select('*')
+    .ilike('room_code', code.trim()).single();
 
-if (error) {
-  console.error('Fehler:', error);
-  return;
-}
-
-if (!data || data.length === 0) {
-  // Raum nicht gefunden
-  document.getElementById('join-error').textContent = '❌ Raum nicht gefunden!';
-  return;
-}
-
-const game = data[0];  // 🆕 Erstes Element nehmen
+  if (error || !data) {
+    document.getElementById('join-error').style.display = '';
+    document.getElementById('join-error').textContent   = '❌ Raum nicht gefunden!';
+    return;
+  }
   if (data.status === 'in_progress') {
     document.getElementById('join-error').style.display = '';
     document.getElementById('join-error').textContent   = '❌ Spiel läuft bereits!';
@@ -322,7 +313,10 @@ const game = data[0];  // 🆕 Erstes Element nehmen
 
 // Update player_b in database
 await sb.from('game_sessions')
-  .update({ player_b: currentUser.id })
+  .update({ 
+    player_b: currentUser.id,
+    status: 'factions'  // 🆕 Status wechseln damit Update triggert
+  })
   .eq('room_code', currentRoom);
 
   subscribeToRoom(currentRoom);
