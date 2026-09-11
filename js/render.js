@@ -242,13 +242,14 @@ function renderSidebar(){
     tl.innerHTML=`<span style="color:${fac.color}">${fac.icon} ${fac.name} am Zug${turnSuffix}</span>`;
   }
 
-  // unit card
+  // ══════════════════════════════════════════════════════
+  // NEUE STRUKTUR: combat-box + combat-log-section
+  // ══════════════════════════════════════════════════════
+  
+  // UNIT INFO (in combat-box)
   const uc=document.getElementById('unit-card');
   
-  // 🔒 Im Combat: KEINE Unit-Info anzeigen, nur Würfel!
-  if(combat) {
-    uc.innerHTML=''; // Leer während Combat
-  } else if(sel){
+  if(sel && !combat){
     const fac=FACTIONS[sel.factionKey];
     const cov=coverBonus(sel);
     const covStr=cov>0?`<span class="cov-badge">+${cov} Deckung</span>`:'';
@@ -260,44 +261,72 @@ function renderSidebar(){
     const opponentLabel = isOpponent ? '<div style="font-size:11px;color:#993C1D;margin-bottom:4px;"><b>👁️ Gegnerische Einheit (Scouting)</b></div>' : '';
     
     uc.innerHTML=`${opponentLabel}<h3>${sel.e} ${sel.name} <span style="font-size:10px;color:${fac.color}">${fac.icon} ${fac.name}</span></h3>
-    <div class="sr-row"><span>HP</span><span>${sel.hp} / ${sel.maxHp}</span></div>
-    <div class="sr-row"><span>Bewegung</span><span style="color:#185FA5">${sel.move} Felder</span></div>
-    <div class="sr-row"><span>Angriffsreichweite</span><span style="color:#993C1D">${sel.ar} Felder</span></div>
-    <div class="sr-row"><span>Angriffswürfel</span><span>${sel.atk}W6${orkStr}</span></div>
-    <div class="sr-row"><span>Rüstungswürfel</span><span>${sel.def}W6 ${covStr}</span></div>
-    <div class="sr-row"><span>Schaden/Wunde</span><span>${sel.dmg[0]}–${sel.dmg[1]}</span></div>
+    <div class="sr-row"><span>BW</span><span style="color:#185FA5">${sel.move}</span></div>
+    <div class="sr-row"><span>AW</span><span style="color:#993C1D">${sel.ar}</span></div>
+    <div class="sr-row"><span>ATK</span><span>${sel.atk}W6${orkStr}</span></div>
+    <div class="sr-row"><span>DEF</span><span>${sel.def}W6 ${covStr}</span></div>
+    <div class="sr-row"><span>DMG</span><span>${sel.dmg[0]}–${sel.dmg[1]}</span></div>
     ${reanStr}
-    <div class="sr-row"><span>Bewegt</span><span>${sel.moved?'✅':'—'}</span></div>
-    <div class="sr-row"><span>Angegriffen</span><span>${sel.attacked?'✅':'—'}</span></div>`;
+    <div class="sr-row"><span>HP</span><span>${sel.hp} / ${sel.maxHp}</span></div>`;
+  } else if(combat) {
+    const {att,def} = combat;
+    uc.innerHTML=`<h3>⚔️ Kampf</h3>
+    <div style="font-size:11px;color:#9a9080;margin-top:6px;">
+      <div class="sr-row"><span>${att.e} ${att.name}</span><span style="color:#e07060;">${att.factionKey}</span></div>
+      <div class="sr-row"><span>VS.</span></div>
+      <div class="sr-row"><span>${def.e} ${def.name}</span><span style="color:#5080b0;">${def.factionKey}</span></div>
+    </div>`;
   } else {
     uc.innerHTML='<h3>Keine Einheit gewählt</h3><div style="font-size:11px;color:var(--text-secondary)">Einheit anklicken</div>';
   }
 
-  // actions — im Online-Modus nur wenn man dran ist (außer bei Würfeln)
+  // COMBAT TABS (Status-Anzeige)
+  const ct=document.getElementById('combat-tabs');
+  ct.innerHTML='';
+  if(sel && !combat){
+    const tabs=[
+      {label:'Bewegen', active: !sel.moved, done: sel.moved},
+      {label:'Bewegt', active: false, done: sel.moved},
+      {label:'Angriff', active: !sel.attacked, done: sel.attacked},
+      {label:'Beenden', active: false, done: false}
+    ];
+    tabs.forEach(t=>{
+      const tab=document.createElement('div');
+      tab.className='combat-tab'+(t.active?' active':'')+(t.done?' done':'');
+      tab.innerHTML=t.active?'✅ '+t.label:(t.done?'✓ '+t.label:t.label);
+      tab.style.cursor='default';
+      ct.appendChild(tab);
+    });
+  }
+
+  // actions — neue Struktur: combat-actions
   const ac=document.getElementById('actions');
   ac.innerHTML='';
 
   if(phase==='over'){
     mkBtn(ac,'🔄 Neu starten',()=>{ showLobby(); });
-    renderLog(); return;
+    renderCombatLog(); return;
   }
 
   // Combat: Würfeln erlauben auch wenn nicht dran (für Verteidiger)
   if(combat){
     const{att,def,step,ar,coverBonus:cov}=combat;
-    const dp=document.createElement('div'); dp.className='dice-panel';
     const hitThresh=att.orkAtk?3:4;
     const isAttacker=!multiplayerMode || att.team===myTeam;
     const isDefender=!multiplayerMode || def.team===myTeam;
     
+    // Würfel-Display und Buttons in COMBAT LOG SECTION
+    const cd=document.getElementById('combat-display');
+    cd.innerHTML='';
+    
     if(step==='roll_atk'){
-      dp.innerHTML=`<div class="dice-title">⚔️ <b>${att.e} ${att.name}</b> → <b>${def.e} ${def.name}</b></div>
-      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Würfle <b>${att.atk} Würfel</b> — Treffer bei <b>${hitThresh}+</b></div>`;
+      cd.innerHTML=`<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Würfle <b>${att.atk}</b> Würfel — Treffer bei <b>${hitThresh}+</b></div>`;
       
       if(isAttacker){
-        const b=document.createElement('button'); b.className='act-btn roll-a';
-        b.textContent=`🎲 ${att.atk}W6 Angriff würfeln (Treffer: ${hitThresh}+)`;
-        // 🔒 Nutze intelligente Wrapper, die Multiplayer/Offline erkennen
+        const b=document.createElement('button'); 
+        b.className='big-btn';
+        b.style.cssText='background:linear-gradient(135deg,#8a6520,#c8973a);border-color:#c8973a;width:100%;font-size:14px;font-weight:600;padding:12px;margin:0;';
+        b.innerHTML=`⚔️ ANGRIFF WÜRFELN — ${att.atk}W6 · TREFFER ${hitThresh}+`;
         b.addEventListener('click', async () => { 
           b.disabled = true;
           try {
@@ -307,12 +336,12 @@ function renderSidebar(){
           }
           b.disabled = false;
         });
-        dp.appendChild(b);
+        cd.appendChild(b);
       } else {
         const lbl=document.createElement('div');
         lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
         lbl.textContent='⏳ Gegner würfelt Angriff…';
-        dp.appendChild(lbl);
+        cd.appendChild(lbl);
       }
     } else if(step==='roll_def'){
       const totalDef=def.def+cov;
@@ -323,17 +352,17 @@ function renderSidebar(){
         d.className='die '+(v>=hitThresh?'ok':'no');
         d.textContent=v; row.appendChild(d);
       });
-      dp.innerHTML=`<div class="dice-title">🎯 Angriff — <b>${hits} Treffer</b> (grün = ${hitThresh}+)</div>`;
-      dp.appendChild(row);
+      cd.appendChild(row);
       const hint=document.createElement('div');
-      hint.style.cssText='font-size:11px;color:var(--text-secondary);margin:4px 0 6px;line-height:1.4;';
-      hint.innerHTML=`Rüstung würfeln — <b>${totalDef} Würfel</b>${cov>0?` <span class="cov-badge">+${cov} Deckung</span>`:''}, Rettung bei <b>5+</b>`;
-      dp.appendChild(hint);
+      hint.style.cssText='font-size:11px;color:var(--text-secondary);margin:8px 0 12px;line-height:1.4;';
+      hint.textContent=`${hits} Treffer — jetzt Rüstung würfeln`;
+      cd.appendChild(hint);
       
       if(isDefender){
-        const b=document.createElement('button'); b.className='act-btn roll-d';
-        b.textContent=`🛡️ ${totalDef}W6 Rüstung würfeln (Rettung: 5+)`;
-        // 🔒 Nutze intelligente Wrapper, die Multiplayer/Offline erkennen
+        const b=document.createElement('button'); 
+        b.className='big-btn';
+        b.style.cssText='background:linear-gradient(135deg,#8a6520,#c8973a);border-color:#c8973a;width:100%;font-size:14px;font-weight:600;padding:12px;margin:0;';
+        b.innerHTML=`🛡️ RÜSTUNG WÜRFELN — ${totalDef}W6 · RETTUNG 5+`;
         b.addEventListener('click', async () => { 
           b.disabled = true;
           try {
@@ -343,17 +372,18 @@ function renderSidebar(){
           }
           b.disabled = false;
         });
-        dp.appendChild(b);
+        cd.appendChild(b);
       } else {
         const lbl=document.createElement('div');
         lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
         lbl.textContent='⏳ Gegner würfelt Rüstung…';
-        dp.appendChild(lbl);
+        cd.appendChild(lbl);
       }
     }
-    ac.appendChild(dp);
+    
+    // Cancel Button
     mkBtn(ac,'✗ Abbrechen',()=>{ combat=null; renderGame(); });
-    renderLog(); return;
+    renderCombatLog(); return;
   }
 
   // Online: Aktionen sperren wenn Gegner dran ist (nur außer Combat)
@@ -364,7 +394,7 @@ function renderSidebar(){
     ac.appendChild(lbl);
     mkBtn(ac,'⏭️ Zug beenden — gesperrt',()=>{});
     ac.lastChild.disabled=true;
-    renderLog(); return;
+    renderCombatLog(); return;
   }
 
   // Gegnerische Einheiten können nicht bewegt/angegriffen werden — nur anschauen
@@ -373,7 +403,7 @@ function renderSidebar(){
     lbl.style.cssText='font-size:11px;color:var(--text-secondary);padding:8px 0;';
     lbl.textContent='👁️ Gegnerische Einheit — keine Aktion möglich';
     ac.appendChild(lbl);
-    renderLog(); return;
+    renderCombatLog(); return;
   }
 
   if(sel&&phase==='move'&&!sel.moved)
@@ -400,16 +430,17 @@ function renderSidebar(){
     }
   }
   mkBtn(ac,'⏭️ Zug beenden', endTurn);
-  renderLog();
+  renderCombatLog();
+}
+
+function renderCombatLog(){
+  const el=document.getElementById('log-box');
+  if(el) el.innerHTML=logs.map(l=>`<div class="le ${l.cls}">${l.msg}</div>`).join('');
 }
 
 function mkBtn(parent,label,cb){
   const b=document.createElement('button'); b.className='act-btn'; b.innerHTML=label;
   b.addEventListener('click',cb); parent.appendChild(b);
-}
-function renderLog(){
-  const el=document.getElementById('log-box');
-  if(el) el.innerHTML=logs.map(l=>`<div class="le ${l.cls}">${l.msg}</div>`).join('');
 }
 
 // ══════════════════════════════════════════════════════

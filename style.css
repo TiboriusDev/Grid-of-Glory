@@ -1165,3 +1165,147 @@ h2.sr-only {
   text-transform: none;
   letter-spacing: 0;
 }
+
+
+/* ════════════════════════════════════════════════════════
+   NEUE KAMPF-UI (Wie im Bild)
+════════════════════════════════════════════════════════ */
+
+.combat-box {
+  background: #1a1814;
+  border: 1px solid #3a3630;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.unit-info {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.unit-info h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8e0d0;
+  margin-bottom: 6px;
+}
+
+.unit-info .sr-row {
+  font-size: 10px;
+  padding: 2px 0;
+  margin-bottom: 2px;
+}
+
+/* Status Tabs */
+.combat-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.combat-tab {
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 1px solid #3a3630;
+  background: rgba(58, 54, 48, 0.4);
+  color: #9a9080;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: default;
+  transition: all 0.15s;
+}
+
+.combat-tab.active {
+  background: linear-gradient(135deg, #2d5a1b, #4a8a2a);
+  color: #6aaa5a;
+  border-color: #4a8a2a;
+  box-shadow: 0 2px 6px rgba(45, 90, 27, 0.3);
+}
+
+.combat-tab.done {
+  color: #5080b0;
+  border-color: #3a6090;
+}
+
+/* Action Buttons Container */
+.combat-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* COMBAT LOG SECTION */
+.combat-log-section {
+  background: #1a1814;
+  border: 1px solid #3a3630;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.combat-log-section h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c8973a;
+  margin-bottom: 10px;
+}
+
+#combat-display {
+  margin-bottom: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9a9080;
+}
+
+#combat-display .dice-row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  justify-content: center;
+}
+
+#combat-display .die {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid;
+}
+
+#combat-display .die.ok {
+  background: rgba(106, 170, 90, 0.3);
+  border-color: #6aaa5a;
+  color: #6aaa5a;
+}
+
+#combat-display .die.no {
+  background: rgba(224, 96, 80, 0.3);
+  border-color: #e07060;
+  color: #e07060;
+}
+
+.dice-panel {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(58, 54, 48, 0.6);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.dice-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8e0d0;
+  margin-bottom: 8px;
+}
