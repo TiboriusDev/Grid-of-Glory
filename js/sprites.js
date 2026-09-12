@@ -50,6 +50,31 @@ const TERRAIN_BASE_SPRITES = {
   2: { name: 'Schmutz', sprite: 'terrain/dirt.png', emoji: '🟤' },
 };
 
+// 🎨 TERRAIN VARIANTEN — Mehrere Sprites pro Terrain-Typ für mehr Abwechslung
+const TERRAIN_VARIANTS = {
+  0: ['grass_1', 'grass_2', 'grass_3'],           // Gras: 3 Varianten
+  1: ['water_1', 'water_2'],                      // Wasser: 2 Varianten
+  2: ['dirt_1', 'dirt_2', 'dirt_3', 'dirt_4'],   // Schmutz: 4 Varianten
+};
+
+// Detaillierte Sprite-Daten für Varianten
+const TERRAIN_VARIANT_SPRITES = {
+  // Gras-Varianten
+  'grass_1': { name: 'Gras 1', sprite: 'terrain/grass_1.png', emoji: '🌱' },
+  'grass_2': { name: 'Gras 2', sprite: 'terrain/grass_2.png', emoji: '🌾' },
+  'grass_3': { name: 'Gras 3', sprite: 'terrain/grass_3.png', emoji: '🌿' },
+  
+  // Wasser-Varianten
+  'water_1': { name: 'Wasser 1', sprite: 'terrain/water_1.png', emoji: '💧' },
+  'water_2': { name: 'Wasser 2', sprite: 'terrain/water_2.png', emoji: '🌊' },
+  
+  // Dirt-Varianten
+  'dirt_1': { name: 'Erde 1', sprite: 'terrain/dirt_1.png', emoji: '🟤' },
+  'dirt_2': { name: 'Erde 2', sprite: 'terrain/dirt_2.png', emoji: '🟫' },
+  'dirt_3': { name: 'Erde 3', sprite: 'terrain/dirt_3.png', emoji: '⬜' },
+  'dirt_4': { name: 'Erde 4', sprite: 'terrain/dirt_4.png', emoji: '🟨' },
+};
+
 // Gelände-Objekt-Sprites (Overlay-Layer)
 const TERRAIN_OBJECT_SPRITES = {
   0: { name: '', sprite: '', emoji: '' },           // Nichts
@@ -88,6 +113,9 @@ function createSpriteElement(spriteType, spriteKey, options = {}) {
       break;
     case 'terrain-base':
       spriteData = TERRAIN_BASE_SPRITES[spriteKey];
+      break;
+    case 'terrain-variant':  // 🎨 Neue Variante!
+      spriteData = TERRAIN_VARIANT_SPRITES[spriteKey];
       break;
     case 'terrain-object':
       spriteData = TERRAIN_OBJECT_SPRITES[spriteKey];

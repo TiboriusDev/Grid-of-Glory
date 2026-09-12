@@ -44,8 +44,9 @@ function renderDeploymentBoard(){
       
       cell.className=cls;
       
-      // Basis-Gelände-Sprite hinzufügen (Gras, Wasser, Dirt)
-      const baseSprite = createSpriteElement('terrain-base', ter.toString());
+      // 🎨 Basis-Gelände-Sprite mit Varianten hinzufügen
+      const variantSprite = getTerrainVariantSprite(ter);
+      const baseSprite = createSpriteElement('terrain-variant', variantSprite || 'grass_1');
       baseSprite.className = 'sprite-terrain-base';
       cell.appendChild(baseSprite);
       
@@ -177,8 +178,9 @@ function renderBoard(){
       if(hlA.some(([hc,hr])=>hc===c&&hr===r)) cls+=' hl-atk';
       cell.className=cls;
       
-      // Basis-Gelände-Sprite hinzufügen (Gras, Wasser, Dirt)
-      const baseSprite = createSpriteElement('terrain-base', ter.toString());
+      // 🎨 Basis-Gelände-Sprite mit Varianten hinzufügen
+      const variantSprite = getTerrainVariantSprite(ter);
+      const baseSprite = createSpriteElement('terrain-variant', variantSprite || 'grass_1');
       baseSprite.className = 'sprite-terrain-base';
       cell.appendChild(baseSprite);
       

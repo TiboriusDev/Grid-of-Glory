@@ -82,6 +82,9 @@ function loadGame(mapDef){
     if(obj > 0) tobj[tk(c,r)] = obj;
   });
   
+  // 🎨 Initialisiere Terrain-Varianten (random Gras/Wasser/Dirt-Sprites)
+  initTerrainVariants();
+  
   units=[];
   let uid=1;
   const facA=FACTIONS[pickedFactions.a];
