@@ -230,8 +230,8 @@ async function saveTeam(teamName, factionA, factionB, units) {
     const { data, error } = await sb.from('user_teams').insert({
       user_id: currentUser.id,
       team_name: teamName,
-      faction_a: factionA,
-      units: JSON.stringify(units)
+      faction: factionA,
+      unit_ids: units // 🔒 NICHT stringify! Supabase konvertiert automatisch zu JSONB
     }).select();
 
     if (error) {

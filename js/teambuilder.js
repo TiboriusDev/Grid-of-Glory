@@ -176,7 +176,7 @@ async function saveCurrentTeam() {
       user_id: currentUser.id,
       team_name: teamName,
       faction: teamBuilderFaction,
-      unit_ids: JSON.stringify(currentTeamUnits), // ['unit_1', 'unit_2', ...]
+      unit_ids: currentTeamUnits, // 🔒 NICHT stringify! Supabase konvertiert automatisch zu JSONB
       created_at: new Date().toISOString()
     };
     
@@ -203,7 +203,10 @@ async function loadUserTeams() {
   
   try {
     const { data, error } = await sb
-      .from('user_', teamBuilderFaction) // faction statt faction_a
+      .from('user_teams')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('faction', teamBuilderFaction) // faction statt faction_a
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -211,11 +214,10 @@ async function loadUserTeams() {
       return [];
     }
     
-    // 🔒 Lade Unit-IDs und rekonstruiere Stats vom Server!
+    // 🔒 Die unit_ids kommen bereits als Array aus der DB (JSONB)
     return (data || []).map(t => ({
       ...t,
-      unit_ids: JSON.parse(t.unit_ids), // ['unit_1', 'unit_2', ...]
-      // Stats NICHT mehr speichern, werden vom Server geholt!
+      // unit_ids ist bereits ein Array! Keine JSON.parse() nötig
     }));
     
   } catch (err) {
@@ -245,9 +247,8 @@ async function applyTeam(teamId) {
       return;
     }
     
-    // 🔒 Team anwenden - Lade nur die Unit-IDs!
-    const unitIds = JSON.parse(data.unit_ids);
-    currentTeamUnits = unitIds; // ['unit_1', 'unit_2', ...]
+    // 🔒 Team anwenden - unit_ids kommt bereits als Array aus der DB!
+    currentTeamUnits = data.unit_ids; // Bereits ein Array!
     teamBuilderFaction = data.faction;
     currentTeamName = data.team_name;
     
