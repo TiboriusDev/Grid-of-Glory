@@ -265,40 +265,73 @@ async function applyTeam(teamId) {
 }
 
 // ── TEAM ZUM SPIEL ÜBERGEBEN ───────────────────────────
-function applyTeamToGame() {
+async function applyTeamToGame() {
   if (currentTeamUnits.length === 0) {
     alert('❌ Wähle erst ein Team!');
     return false;
   }
   
-  // 🔒 WICHTIG: Rekonstruiere echte Unit-Stats vom Server
-  const faction = FACTIONS[teamBuilderFaction];
-  const gameUnits = currentTeamUnits.map(unitId => {
-    const canonical = faction.roster.find(u => u.id === unitId);
-    if (!canonical) {
-      alert('❌ Unit nicht in Fraktion gefunden! Mögliche Manipulaton?');
-      return null;
+  try {
+    // 🔒 WICHTIG: Validiere Team beim Server & hole echte Stats aus DB
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/validate-team`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseClient.auth.session()?.access_token || ''}`
+        },
+        body: JSON.stringify({
+          faction: teamBuilderFaction,
+          unit_ids: currentTeamUnits
+        })
+      }
+    );
+    
+    if (!response.ok) {
+      const error = await response.json();
+      alert(`❌ Team-Validierung fehlgeschlagen: ${error.error}`);
+      return false;
     }
-    // Kopiere NUR die kanonischen Stats vom Server!
-    return { ...canonical, team: 'a' };
-  }).filter(u => u !== null);
-  
-  if (gameUnits.length === 0) {
-    alert('❌ Keine gültigen Einheiten!');
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert(`❌ Team ist ungültig: ${data.error}`);
+      return false;
+    }
+    
+    // ✅ Hier haben wir die ECHTEN Stats aus der DB!
+    const gameUnits = data.units.map(dbUnit => ({
+      ...dbUnit,
+      team: 'a'  // Der Client ist immer Team A
+    }));
+    
+    if (gameUnits.length === 0) {
+      alert('❌ Keine gültigen Einheiten!');
+      return false;
+    }
+    
+    // Übergebe dem Spiel die Server-validierten Stats
+    pickedFactions.a = teamBuilderFaction;
+    window.customTeamUnits = gameUnits; // Mit ECHTEN Stats aus DB!
+    window.validatedTeam = data; // Speichere auch vollständige Validierungs-Response
+    
+    console.log('✅ Team vom Server validiert & zum Spiel übergeben:', {
+      faction: teamBuilderFaction,
+      faction_name: data.faction_name,
+      units: gameUnits.length,
+      teamName: currentTeamName,
+      dbUnits: data.units // ECHTE Stats aus DB
+    });
+    
+    return true;
+    
+  } catch (err) {
+    alert(`❌ Fehler beim Team-Validieren: ${err.message}`);
+    console.error('Team-Validierungsfehler:', err);
     return false;
   }
-  
-  // Übergebe dem Spiel
-  pickedFactions.a = teamBuilderFaction;
-  window.customTeamUnits = gameUnits; // Mit echten Stats vom Server!
-  
-  console.log('✅ Team zum Spiel übergeben:', {
-    faction: teamBuilderFaction,
-    units: gameUnits.length,
-    teamName: currentTeamName
-  });
-  
-  return true;
 }
 
 // ── HILFSFUNKTION: Team-Manager UI ─────────────────────
