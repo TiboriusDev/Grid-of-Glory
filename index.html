@@ -53,7 +53,7 @@
     </div>
 
     <div style="text-align:center;font-size:11px;color:var(--text-muted);">
-      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.3.5)
+      💾 Dein Team wird automatisch in der Cloud gespeichert (Version 1.3.6)
     </div>
   </div>
 </div>
@@ -73,6 +73,11 @@
     <button class="big-btn" id="btn-teambuilder-lobby"
       style="background:linear-gradient(135deg,#6b2fa0,#8a4ab8);border-color:#8a4ab8;margin-bottom:8px;">
       🛠️ Team zusammenstellen
+    </button>
+
+    <button class="big-btn" id="btn-my-teams-lobby"
+      style="background:linear-gradient(135deg,#4a2070,#7a40b0);border-color:#7a40b0;margin-bottom:8px;">
+      📋 Meine Teams
     </button>
 
     <button class="big-btn" id="btn-local"
@@ -98,7 +103,7 @@
     <div id="join-error" style="display:none;"></div>
     
     <div style="text-align:center;margin-top:30px;font-size:11px;color:var(--text-muted);">
-      Version 1.3.5
+      Version 1.3.6
     </div>
   </div>
 </div>
@@ -189,6 +194,44 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 1.7: MEINE TEAMS — Team Manager
+════════════════════════════════════════════════════════ -->
+<div id="screen-my-teams" style="display:none;">
+  <div style="position:absolute;top:10px;left:10px;">
+    <button id="btn-back-my-teams" style="font-size:11px;padding:6px 10px;">← Zurück</button>
+  </div>
+  
+  <div class="card" style="max-width:900px;margin:20px auto;">
+    <h3>📋 Meine Teams</h3>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">
+      Verwalte und lade deine gespeicherten Teams
+    </div>
+
+    <!-- Fraktion-Tabs -->
+    <div id="my-teams-faction-tabs" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;"></div>
+
+    <!-- Teams-Liste -->
+    <div id="my-teams-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+    <!-- Leere State -->
+    <div id="my-teams-empty" style="text-align:center;padding:40px;color:var(--text-muted);display:none;">
+      <div style="font-size:32px;margin-bottom:10px;">📭</div>
+      <div>Keine Teams für diese Fraktion gespeichert</div>
+      <button class="big-btn" id="btn-create-new-team" 
+        style="background:linear-gradient(135deg,#6b2fa0,#8a4ab8);border-color:#8a4ab8;margin-top:20px;">
+        ➕ Neues Team erstellen
+      </button>
+    </div>
+
+    <!-- Info -->
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);">
+      💡 Klick auf ein Team um es zu laden oder zu bearbeiten
     </div>
   </div>
 </div>
@@ -426,6 +469,17 @@ document.addEventListener('DOMContentLoaded', () => {
       hideTeamBuilder();
       showFactionScreen();
     }
+  });
+
+  // Meine Teams
+  document.getElementById('btn-my-teams-lobby').addEventListener('click', () => showMyTeams());
+  document.getElementById('btn-back-my-teams').addEventListener('click', () => {
+    hideMyTeams();
+    showLobby();
+  });
+  document.getElementById('btn-create-new-team').addEventListener('click', () => {
+    hideMyTeams();
+    showTeamBuilderFactionSelect();
   });
 });
 </script>

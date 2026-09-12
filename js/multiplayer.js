@@ -148,7 +148,7 @@ async function reconnectToActiveGame() {
 // ═══════════════════════════════════════════════════════════════
 
 function hideAllScreens() {
-  ['screen-lobby','screen-waiting','screen-faction','screen-teambuilder-faction-select','screen-teambuilder',
+  ['screen-lobby','screen-waiting','screen-faction','screen-teambuilder-faction-select','screen-teambuilder','screen-my-teams',
    'screen-waiting-map','screen-map','screen-deployment','screen-game','screen-winner']
     .forEach(id => {
       const el = document.getElementById(id);

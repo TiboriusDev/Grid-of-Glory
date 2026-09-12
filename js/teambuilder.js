@@ -335,41 +335,127 @@ async function applyTeamToGame() {
   }
 }
 
-// ── HILFSFUNKTION: Team-Manager UI ─────────────────────
-async function showTeamManager() {
+// ──────────────────────────────────────────────────────
+// TEAM MANAGER — Meine Teams anzeigen & bearbeiten
+// ──────────────────────────────────────────────────────
+
+function showMyTeams() {
   if (!currentUser) {
     alert('❌ Bitte melde dich an!');
     return;
   }
   
-  // Modal zum Team laden
-  const factionKey = prompt('Fraktion eingeben (marines/orks/eldar/necrons):').toLowerCase();
-  if (!factionKey || !FACTIONS[factionKey]) {
-    alert('❌ Unbekannte Fraktion!');
-    return;
-  }
+  hideAllScreens();
+  document.getElementById('screen-my-teams').style.display = '';
+  renderMyTeams();
+}
+
+function hideMyTeams() {
+  document.getElementById('screen-my-teams').style.display = 'none';
+}
+
+async function renderMyTeams(filterFaction = null) {
+  const allTeams = await loadUserTeams();
   
-  const teams = await loadUserTeams(); // Das sollte gefiltert nach fraktion sein
+  // Alle Fraktionen sammeln
+  const factionsList = ['marines', 'orks', 'eldar', 'necrons'];
+  const factionTabs = document.getElementById('my-teams-faction-tabs');
+  factionTabs.innerHTML = '';
   
-  if (teams.length === 0) {
-    alert('❌ Keine Teams für diese Fraktion gespeichert!');
-    return;
-  }
-  
-  // Einfaches Text-Select (später bessere UI)
-  let teamList = 'Deine Teams:\n\n';
-  teams.forEach((t, i) => {
-    teamList += `${i + 1}. ${t.team_name} (${t.units.length} Units)\n`;
+  factionsList.forEach(faction => {
+    const button = document.createElement('button');
+    button.className = 'big-btn';
+    button.style.padding = '8px 16px';
+    button.style.fontSize = '12px';
+    button.textContent = `${FACTIONS[faction].icon} ${FACTIONS[faction].name}`;
+    button.style.background = filterFaction === faction ? 'linear-gradient(135deg,#8a6520,#c8973a)' : 'rgba(255,255,255,0.1)';
+    button.style.borderColor = filterFaction === faction ? '#c8973a' : 'rgba(255,255,255,0.3)';
+    
+    button.addEventListener('click', () => renderMyTeams(faction));
+    factionTabs.appendChild(button);
   });
   
-  const choice = prompt(teamList + '\nTeam-Nummer (0 zum Abbrechen):');
-  if (!choice || choice === '0') return;
+  // Erste Fraktion anzeigen, wenn nicht gefiltert
+  const selectedFaction = filterFaction || 'marines';
+  const teamsForFaction = allTeams.filter(t => t.faction === selectedFaction);
   
-  const selectedTeam = teams[parseInt(choice) - 1];
-  if (!selectedTeam) {
-    alert('❌ Ungültige Auswahl!');
+  const teamsList = document.getElementById('my-teams-list');
+  const emptyState = document.getElementById('my-teams-empty');
+  
+  if (teamsForFaction.length === 0) {
+    teamsList.innerHTML = '';
+    emptyState.style.display = '';
     return;
   }
   
-  await applyTeam(selectedTeam.id);
+  emptyState.style.display = 'none';
+  teamsList.innerHTML = '';
+  
+  teamsForFaction.forEach(team => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cursor = 'pointer';
+    card.style.transition = 'all 0.2s';
+    
+    const faction = FACTIONS[team.faction];
+    const unitCount = team.unit_ids ? team.unit_ids.length : 0;
+    
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:24px;">${faction.icon}</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:12px;">${team.team_name}</div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            ${team.created_at ? new Date(team.created_at).toLocaleDateString('de-DE') : 'Kein Datum'}
+          </div>
+        </div>
+      </div>
+      
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
+        🪖 ${unitCount}/6 Einheiten
+      </div>
+      
+      <div style="display:flex;gap:8px;">
+        <button class="big-btn" style="flex:1;font-size:11px;background:linear-gradient(135deg,#4a2070,#7a40b0);border-color:#7a40b0;padding:8px;">
+          📂 Laden
+        </button>
+        <button class="big-btn" style="flex:1;font-size:11px;background:rgba(192,64,64,0.2);border:1px solid rgba(192,64,64,0.4);color:var(--red-light);padding:8px;">
+          🗑️
+        </button>
+      </div>
+    `;
+    
+    // Load Button
+    card.querySelector('button:first-of-type').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await applyTeam(team.id);
+      hideMyTeams();
+    });
+    
+    // Delete Button
+    card.querySelector('button:last-of-type').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm(`🗑️ Team "${team.team_name}" wirklich löschen?`)) {
+        await deleteTeam(team.id);
+        renderMyTeams(selectedFaction);
+      }
+    });
+    
+    teamsList.appendChild(card);
+  });
+}
+
+async function deleteTeam(teamId) {
+  try {
+    const { error } = await sb.from('user_teams').delete().eq('id', teamId);
+    
+    if (error) {
+      alert(`❌ Fehler: ${error.message}`);
+      return;
+    }
+    
+    alert('✅ Team gelöscht!');
+  } catch (err) {
+    alert(`❌ Fehler: ${err.message}`);
+  }
 }
