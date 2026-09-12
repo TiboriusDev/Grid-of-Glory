@@ -1,78 +1,55 @@
 // Anhang zu sprites.js — Terrain-Varianten System
 
 // ═══════════════════════════════════════════════════════════════
-// 🎨 TERRAIN VARIANTEN — Zufällige Abwechslung beim Rendering
+// 🎨 TERRAIN VARIANTEN — Jedes Feld bekommt ein random Sprite!
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Speichert die ausgewählten Varianten pro Terrain-Typ
- * Struktur: { terrainType -> variantKey }
- * z.B. { '0': 'grass_2', '1': 'water_1', '2': 'dirt_3' }
+ * Speichert die ausgewählte Variante pro Feld
+ * Struktur: 'c,r' -> variantKey
+ * z.B. { '0,0': 'grass_2', '1,0': 'grass_1', '1,1': 'grass_3' }
  */
-let terrainVariantSelection = {};
+let fieldVariants = {};
 
 /**
  * Initialisiert die Terrain-Varianten beim Spiel-Start
- * Wählt für jeden Terrain-Typ zufällig eine Variante
+ * Jedes Feld bekommt eine random Variante seiner Terrain-Typ-Klasse
  * 
  * USAGE:
  *   initTerrainVariants();  // Beim loadGame() aufrufen
  */
 function initTerrainVariants() {
-  terrainVariantSelection = {};
-  
-  // Für jeden Terrain-Typ eine Variante wählen
-  Object.entries(TERRAIN_VARIANTS).forEach(([terrainType, variants]) => {
-    if (variants && variants.length > 0) {
-      // Random Variante aus der Liste wählen
-      const randomVariant = variants[Math.floor(Math.random() * variants.length)];
-      terrainVariantSelection[terrainType] = randomVariant;
-      console.log(`🎨 Terrain ${terrainType}: ${randomVariant} gewählt`);
-    }
-  });
+  fieldVariants = {};
+  console.log('🎨 Initialisiere Terrain-Varianten für alle Felder...');
 }
 
 /**
- * Gibt die Sprite-Variante für einen bestimmten Terrain-Typ zurück
+ * Bestimmt eine random Variante für ein Terrain-Feld
+ * Wird beim Rendering aufgerufen
  * 
+ * @param {number} c - Column
+ * @param {number} r - Row
  * @param {number} terrainType - Der Terrain-Typ (0=Gras, 1=Wasser, 2=Dirt)
  * @returns {string} Die Sprite-Key der Variante (z.B. 'grass_2')
  */
-function getTerrainVariantSprite(terrainType) {
-  const variant = terrainVariantSelection[terrainType];
-  if (!variant) {
-    console.warn(`⚠️ Keine Variante für Terrain-Typ ${terrainType} gefunden`);
+function getFieldVariantSprite(c, r, terrainType) {
+  const key = `${c},${r}`;
+  
+  // Wenn bereits gecacht, return cached
+  if (fieldVariants[key]) {
+    return fieldVariants[key];
+  }
+  
+  // Neue Variante wählen
+  const variants = TERRAIN_VARIANTS[terrainType];
+  if (!variants || variants.length === 0) {
+    console.warn(`⚠️ Keine Varianten für Terrain-Typ ${terrainType}`);
     return null;
   }
-  return variant;
+  
+  // Random Variante aus der Liste wählen
+  const randomVariant = variants[Math.floor(Math.random() * variants.length)];
+  fieldVariants[key] = randomVariant;
+  
+  return randomVariant;
 }
-
-/**
- * Alternative: Falls man ALLE Felder unterschiedliche Varianten haben will
- * (mehr Abwechslung, aber mehr Komplexität)
- * 
- * Uncomment um zu verwenden:
- 
-// Speichert Varianten pro Feld: '5,5' -> 'grass_1'
-let fieldVariants = {};
-
-function initFieldVariants() {
-  fieldVariants = {};
-  // Wird später pro Feld gefüllt
-}
-
-function setFieldVariant(c, r, terrainType) {
-  const key = `${c},${r}`;
-  const variants = TERRAIN_VARIANTS[terrainType];
-  if (variants && variants.length > 0) {
-    const randomVariant = variants[Math.floor(Math.random() * variants.length)];
-    fieldVariants[key] = randomVariant;
-  }
-}
-
-function getFieldVariantSprite(c, r) {
-  const key = `${c},${r}`;
-  return fieldVariants[key] || null;
-}
-
- */
