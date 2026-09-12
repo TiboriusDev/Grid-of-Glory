@@ -206,7 +206,7 @@ async function loadUserTeams() {
       .from('user_teams')
       .select('*')
       .eq('user_id', currentUser.id)
-      .eq('faction', teamBuilderFaction) // faction statt faction_a
+      // 🔒 KEINE Fraktion-Filterung! Lade ALLE Teams, filtern tut renderMyTeams()
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -356,6 +356,7 @@ function hideMyTeams() {
 
 async function renderMyTeams(filterFaction = null) {
   const allTeams = await loadUserTeams();
+  console.log('📊 Alle Teams geladen:', allTeams); // DEBUG
   
   // Alle Fraktionen sammeln
   const factionsList = ['marines', 'orks', 'eldar', 'necrons'];
@@ -378,11 +379,13 @@ async function renderMyTeams(filterFaction = null) {
   // Erste Fraktion anzeigen, wenn nicht gefiltert
   const selectedFaction = filterFaction || 'marines';
   const teamsForFaction = allTeams.filter(t => t.faction === selectedFaction);
+  console.log(`🔍 Teams für Fraktion "${selectedFaction}":`, teamsForFaction); // DEBUG
   
   const teamsList = document.getElementById('my-teams-list');
   const emptyState = document.getElementById('my-teams-empty');
   
   if (teamsForFaction.length === 0) {
+    console.warn(`⚠️ Keine Teams für Fraktion "${selectedFaction}" gefunden!`); // DEBUG
     teamsList.innerHTML = '';
     emptyState.style.display = '';
     return;
