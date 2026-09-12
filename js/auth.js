@@ -170,7 +170,6 @@ async function checkAuthStatus() {
       
       // Falls kein aktives Spiel: Zur Lobby
       showLobby();
-      console.log('✅ Angemeldet als:', currentUser.email || currentUser.user_metadata?.name);
     } else {
       currentUser = null;
       showAuthScreen();
@@ -198,8 +197,7 @@ function updateUserDisplay() {
 // ── SESSION LISTENER (Auto-Redirect) ───────────────────
 // Wird aufgerufen wenn User sich anmeldet/abmeldet
 sb.auth.onAuthStateChange(async (event, session) => {
-  console.log('🔐 Auth Event:', event);
-  
+ 
   if (event === 'SIGNED_IN') {
     currentUser = session.user;
     hideAuthScreen();
@@ -240,7 +238,6 @@ async function saveTeam(teamName, factionA, factionB, units) {
       return false;
     }
 
-    console.log('✅ Team gespeichert:', data);
     return true;
   } catch (err) {
     console.error('Fehler:', err);
@@ -273,7 +270,6 @@ async function loadTeams() {
 
 // ── INIT: Beim Laden der Seite ─────────────────────────
 window.addEventListener('load', () => {
-  console.log('🚀 Auth-System wird initialisiert...');
   checkAuthStatus();
 });
 

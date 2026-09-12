@@ -166,12 +166,8 @@ async function rollAtkSecure(){
       dice_count: diceCount
     };
     
-    console.log('🎲 rollAtkSecure - Payload:', payload);
-    
     // 🔒 SERVER WÜRFELT!
     const diceResult = await callEdgeFunction('roll-dice', payload);
-
-    console.log('🎲 rollAtkSecure - Ergebnis:', diceResult);
 
     // Echte Würfel vom Server verwenden!
     combat.ar = diceResult.rolls;

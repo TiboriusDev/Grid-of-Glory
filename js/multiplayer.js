@@ -128,7 +128,6 @@ async function reconnectToActiveGame() {
     currentGameId = game.id;
     myTeam = game.player_a === currentUser.id ? 'a' : 'b';
     
-    console.log('🔄 Reconnect: Ins Spiel ' + currentRoom + ' zurück!');
     subscribeToRoom(currentRoom);
     
     // 🎮 Zur korrekten Seite springen
@@ -276,8 +275,6 @@ async function createRoom() {
   myTeam          = 'a';
   currentRoom     = code;
   currentGameId   = data.id;  // 🆕 Speichere die echte game_id
-  console.log('✅ Raum erstellt:', { code, currentGameId, currentRoom });
-  console.log('📡 Abonniere jetzt Raum:', code);
   subscribeToRoom(code);
   showWaiting(code);
 }
@@ -310,9 +307,6 @@ async function joinRoom(code) {
   myTeam          = 'b';
   currentRoom     = code.toUpperCase();
   currentGameId   = data.id;  // 🆕 Speichere die echte game_id
-  console.log('✅ Raum beigetreten:', { code: currentRoom, currentGameId });
-  
-  console.log('🔄 Sende UPDATE für room_code:', currentRoom);
   const { error: updateError } = await sb.from('game_sessions')
     .update({ 
       player_b: currentUser.id,
@@ -320,13 +314,6 @@ async function joinRoom(code) {
     })
     .eq('room_code', currentRoom);
 
-  if (updateError) {
-    console.error('❌ UPDATE FEHLER:', updateError);
-  } else {
-    console.log('✅ UPDATE gemacht - player_b gespeichert');
-  }
-
-  console.log('📡 Abonniere jetzt Raum:', currentRoom);
   subscribeToRoom(currentRoom);
   showFactionScreen();
 }
@@ -376,8 +363,6 @@ async function startRematch() {
 function subscribeToRoom(code) {
   if (realtimeChannel) realtimeChannel.unsubscribe();
 
-  console.log('📡 subscribeToRoom - Filter:', `room_code=eq.${code}`);
-  
   realtimeChannel = sb
     .channel(`room:${code}`)
     .on('postgres_changes', {
@@ -386,24 +371,15 @@ function subscribeToRoom(code) {
       table:  'game_sessions',
       filter: `room_code=eq.${code}`
     }, payload => {
-      console.log('🔔 REALTIME UPDATE EMPFANGEN:', payload);
       handleRoomUpdate(payload.new);
     })
-    .subscribe(status => {
-      console.log('Realtime:', status);
-    });
 }
 
 function handleRoomUpdate(row) {
-  console.log('📍 handleRoomUpdate called with status:', row.status, 'team:', myTeam);
-  console.log('🔍 Full row:', row);
-
   // ── Lobby-Phase: Völker wählen ──
   if (row.status === 'factions') {
-    console.log('✓ Status ist "factions"');
     // Spieler A geht zur Völkerwahl wenn B beigetreten ist
     if (myTeam === 'a') {
-      console.log('🎬 showFactionScreen() wird aufgerufen für Team A');
       showFactionScreen();
     }
     // Fortschritt aktualisieren

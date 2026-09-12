@@ -189,7 +189,6 @@ async function saveCurrentTeam() {
     }
     
     alert('✅ Team gespeichert!');
-    console.log('Team gespeichert:', data);
     
   } catch (err) {
     alert(`❌ Fehler: ${err.message}`);
@@ -252,7 +251,6 @@ async function applyTeam(teamId) {
     teamBuilderFaction = data.faction;
     currentTeamName = data.team_name;
     
-    console.log('✅ Team angewendet:', currentTeamName);
     alert(`✅ Team "${currentTeamName}" ausgewählt!`);
     
     // Zurück zur Lobby
@@ -318,14 +316,6 @@ async function applyTeamToGame() {
     window.customTeamUnits = gameUnits; // Mit ECHTEN Stats aus DB!
     window.validatedTeam = data; // Speichere auch vollständige Validierungs-Response
     
-    console.log('✅ Team vom Server validiert & zum Spiel übergeben:', {
-      faction: teamBuilderFaction,
-      faction_name: data.faction_name,
-      units: gameUnits.length,
-      teamName: currentTeamName,
-      dbUnits: data.units // ECHTE Stats aus DB
-    });
-    
     return true;
     
   } catch (err) {
@@ -356,8 +346,7 @@ function hideMyTeams() {
 
 async function renderMyTeams(filterFaction = null) {
   const allTeams = await loadUserTeams();
-  console.log('📊 Alle Teams geladen:', allTeams); // DEBUG
-  
+ 
   // Alle Fraktionen sammeln
   const factionsList = ['marines', 'orks', 'eldar', 'necrons'];
   const factionTabs = document.getElementById('my-teams-faction-tabs');
@@ -379,13 +368,11 @@ async function renderMyTeams(filterFaction = null) {
   // Erste Fraktion anzeigen, wenn nicht gefiltert
   const selectedFaction = filterFaction || 'marines';
   const teamsForFaction = allTeams.filter(t => t.faction === selectedFaction);
-  console.log(`🔍 Teams für Fraktion "${selectedFaction}":`, teamsForFaction); // DEBUG
-  
+ 
   const teamsList = document.getElementById('my-teams-list');
   const emptyState = document.getElementById('my-teams-empty');
   
   if (teamsForFaction.length === 0) {
-    console.warn(`⚠️ Keine Teams für Fraktion "${selectedFaction}" gefunden!`); // DEBUG
     teamsList.innerHTML = '';
     emptyState.style.display = '';
     return;
