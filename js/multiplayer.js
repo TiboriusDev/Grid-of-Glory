@@ -373,6 +373,7 @@ function subscribeToRoom(code) {
     }, payload => {
       handleRoomUpdate(payload.new);
     })
+    .subscribe();  // 🔒 WICHTIG: Aktiviere den Listener!
 }
 
 function handleRoomUpdate(row) {
